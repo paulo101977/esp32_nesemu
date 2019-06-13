@@ -7,25 +7,19 @@ No.	Icon	Name	Filename
 6.	}	Galaga	galaga.nes
 7.	;	Metroid	metroid.nes
 *#*
-13.	;	13
-14.	;	14
-
+NOTE: The rest of this file is ignored by the program
 2.	%	Super Mario Bros 2  smb2.nes
 7.	/	Contra  contra.nes
 10.	$	Castlevania cv1.nes
 11.	/	Simon's Quest   cv2.nes 
 12.	{	Bubble Bobble   bubble.nes
 
-
-#	Don't change the Layout, otherwise the Menu won't show up
-#	in the right form or the whole emulator might crash!!!
-#	If you flash, for example, only to Rom-Partition 2, 
-#	you'll have to give Rom1 in roms.txt anyhow an Name (a place-maker)
-#	otherwise the menu couldn't load the right partition.
+#   To flash roms, place in this directory and use the Platform.IO Upload File System Image task.
+#	Note the four tab-delimited columns.  All four should exist or the menu will not parse correctly.
+#   The character delimiter of the table above is tab, not spaces.
+#   The last column should match the ROM file name in the SPIFFS volume.
 #	Don't erase this characters "*#*" or the emulator will definetly
-#	crash...they show the emulator where the file ends
-#	To change the amount of Roms shown in the menu, move the characters
-#	to another line (in this example menu will show 10 Roms)
+#	crash...they show the emulator where the file ends!
 #	To insert a new Rom in the Menu start a new Line, and write in the
 #	next Number followed by a "." + Tabulator, than choose an Icon-Character
 # 	(List below) + Tabulator, and finaly the Name. For example:
