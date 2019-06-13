@@ -59,6 +59,7 @@ GPIO Controller
    A        CONFIG_HW_GPIO_A
    ON/OFF   TBD
    MENU     CONFIG_HW_GPIO_MENU
+   ======   ===============================
 
 Connect also 3.3V to the Buttons
 
