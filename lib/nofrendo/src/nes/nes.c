@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <noftypes.h>
 #include "nes6502.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <log.h>
 #include <osd.h>
 #include <gui.h>
@@ -360,6 +362,7 @@ static void system_video(bool draw)
 void nes_emulate(void)
 {
    int last_ticks, frames_to_render;
+   int framesBeforeYield=0;
 
    osd_setsound(nes.apu->process);
 
@@ -397,6 +400,13 @@ void nes_emulate(void)
          frames_to_render = 0;
          nes_renderframe(true);
          system_video(true);
+         if (framesBeforeYield <= 0) 
+         {
+            vTaskDelay(1);
+            framesBeforeYield = 200;
+         } else {
+            framesBeforeYield--;
+         }
       }
    }
 }
