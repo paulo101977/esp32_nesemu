@@ -1,4 +1,6 @@
 build/
+.pioenvs/
+.vscode/
 sdkconfig.old
 *.nes
 
