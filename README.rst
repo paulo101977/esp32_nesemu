@@ -22,8 +22,10 @@ Compiling
 Use Platform.IO with the ESP32 platform installed, ESP-IDF framework also needs to be installed.  I use VSCode with the Platform.IO plugin but you can also use `pio` command line.
 
 You should review and revise the sdkconfig.h file to match your specific board.  My file is configured for a Heltec Wifi Kit with some changes:
-- XTAL frequency set to 26 -- Serial console was going bonkers at the wrong speed until I changed this.
-- Bluetooth and Bluedroid not enabled to save RAM (I hope?)
+
+    * XTAL frequency set to 26 -- Serial console was going bonkers at the wrong speed until I changed this.
+   
+    * Bluetooth and Bluedroid not enabled to save RAM (I hope?)
 
 Display
 -------
@@ -46,6 +48,11 @@ Also connect the power supply and ground. For now, the LCD is controlled using a
 
 GPIO Controller
 ---------------
+
+You can use this control option if you really love soldering.  Before going this route I recommend you support your local thrift store (HELLO GOODWILL!) to see if you can't get a PSX controller for $5 or something.
+
+To enable GPIO control, define the CONFIG_HW_CONTROLLER_GPIO constant and undefine (comment out) CONFIG_HW_CONTROLLER_PSX.
+
    ======   ===============================
    Button   GPIO CONSTANT
    ======   ===============================
