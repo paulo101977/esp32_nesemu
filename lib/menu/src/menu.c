@@ -18,6 +18,8 @@
 //#include "decode_image.h"
 #include "pretty_effect.h"
 #include "driver/ledc.h"
+#include "esp_spiffs.h"
+#include "menu.h"
 
 /*
  This code displays some fancy graphics on the 320x240 LCD on an ESP-WROVER_KIT board.
@@ -30,45 +32,48 @@
  before the transaction is sent, the callback will set this line to the correct state.
 */
 
-#define PIN_NUM_MISO 25
-#define PIN_NUM_MOSI 23
-#define PIN_NUM_CLK  19
-#define PIN_NUM_CS   22
+#define PIN_NUM_MISO CONFIG_HW_LCD_MISO_GPIO
+#define PIN_NUM_MOSI CONFIG_HW_LCD_MOSI_GPIO
+#define PIN_NUM_CLK CONFIG_HW_LCD_CLK_GPIO
+#define PIN_NUM_CS CONFIG_HW_LCD_CS_GPIO
 
-#define PIN_NUM_DC   21
-#define PIN_NUM_RST  18
-//#define PIN_NUM_BCKL 27
+#define PIN_NUM_DC CONFIG_HW_LCD_DC_GPIO
+#define PIN_NUM_RST CONFIG_HW_LCD_RESET_GPIO
+#define PIN_NUM_BCKL CONFIG_HW_LCD_BL_GPIO
 
-#define LEDC_LS_TIMER          	LEDC_TIMER_1
-#define LEDC_LS_MODE           	LEDC_HIGH_SPEED_MODE
-#define PIN_NUM_BCKL 			27//CONFIG_HW_LCD_BL_GPIO
-#define LEDC_LS_CH3_CHANNEL    	LEDC_CHANNEL_3
+#define LEDC_LS_TIMER LEDC_TIMER_1
+#define LEDC_LS_MODE LEDC_HIGH_SPEED_MODE
+#define LEDC_LS_CH3_CHANNEL LEDC_CHANNEL_3
 
-#define LCD_BKG_ON()    GPIO.out_w1tc = (1 << PIN_NUM_BCKL) // Backlight ON
-#define LCD_BKG_OFF()   GPIO.out_w1ts = (1 << PIN_NUM_BCKL) //Backlight OFF
-//To speed up transfers, every SPI transfer sends a bunch of lines. This define specifies how many. More means more memory use,
+#define LCD_BKG_ON() GPIO.out_w1tc = (1 << PIN_NUM_BCKL)  // Backlight ON
+#define LCD_BKG_OFF() GPIO.out_w1ts = (1 << PIN_NUM_BCKL) //Backlight OFF
+//To speed up transfers, every SPI transfer sends a bunch of rows. This define specifies how many. More means more memory use,
 //but less overhead for setting up / finishing transfers. Make sure 240 is dividable by this.
-#define PARALLEL_LINES 2
+#define FRAMEBUFFER_HEIGHT 4
+
+#define NO_ROM_SELECTED 9999
 
 /*
  The LCD needs a bunch of command/argument values to be initialized. They are stored in this struct.
 */
-typedef struct {
+typedef struct
+{
     uint8_t cmd;
     uint8_t data[16];
     uint8_t databytes; //No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
 } lcd_init_cmd_t;
 
-typedef enum {
+typedef enum
+{
     LCD_TYPE_ILI = 1,
     LCD_TYPE_ST,
     LCD_TYPE_MAX,
 } type_lcd_t;
 
 //Place data into DRAM. Constant data gets placed into DROM by default, which is not accessible by DMA.
-DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
+DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[] = {
     /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
-    {0x36, {(1<<5)|(1<<6)}, 1},
+    {0x36, {(1 << 5) | (1 << 6)}, 1},
     /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
     {0x3A, {0x55}, 1},
     /* Porch Setting */
@@ -97,10 +102,9 @@ DRAM_ATTR static const lcd_init_cmd_t st_init_cmds[]={
     {0x11, {0}, 0x80},
     /* Display On */
     {0x29, {0}, 0x80},
-    {0, {0}, 0xff}
-};
+    {0, {0}, 0xff}};
 
-DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[]={
+DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[] = {
     /* Power contorl B, power control = 0, DC_ENA = 1 */
     {0xCF, {0x00, 0x83, 0X30}, 3},
     /* Power on sequence control,
@@ -165,12 +169,12 @@ void lcd_cmd(spi_device_handle_t spi, const uint8_t cmd)
 {
     esp_err_t ret;
     spi_transaction_t t;
-    memset(&t, 0, sizeof(t));       //Zero out the transaction
-    t.length=8;                     //Command is 8 bits
-    t.tx_buffer=&cmd;               //The data is the cmd itself
-    t.user=(void*)0;                //D/C needs to be set to 0
-    ret=spi_device_transmit(spi, &t);  //Transmit!
-    assert(ret==ESP_OK);            //Should have had no issues.
+    memset(&t, 0, sizeof(t));           //Zero out the transaction
+    t.length = 8;                       //Command is 8 bits
+    t.tx_buffer = &cmd;                 //The data is the cmd itself
+    t.user = (void *)0;                 //D/C needs to be set to 0
+    ret = spi_device_transmit(spi, &t); //Transmit!
+    assert(ret == ESP_OK);              //Should have had no issues.
 }
 
 //Send data to the LCD. Uses spi_device_transmit, which waits until the transfer is complete.
@@ -178,51 +182,54 @@ void lcd_data(spi_device_handle_t spi, const uint8_t *data, int len)
 {
     esp_err_t ret;
     spi_transaction_t t;
-    if (len==0) return;             //no need to send anything
-    memset(&t, 0, sizeof(t));       //Zero out the transaction
-    t.length=len*8;                 //Len is in bytes, transaction length is in bits.
-    t.tx_buffer=data;               //Data
-    t.user=(void*)1;                //D/C needs to be set to 1
-    ret=spi_device_transmit(spi, &t);  //Transmit!
-    assert(ret==ESP_OK);            //Should have had no issues.
+    if (len == 0)
+        return;                         //no need to send anything
+    memset(&t, 0, sizeof(t));           //Zero out the transaction
+    t.length = len * 8;                 //Len is in bytes, transaction length is in bits.
+    t.tx_buffer = data;                 //Data
+    t.user = (void *)1;                 //D/C needs to be set to 1
+    ret = spi_device_transmit(spi, &t); //Transmit!
+    assert(ret == ESP_OK);              //Should have had no issues.
 }
 
 //This function is called (in irq context!) just before a transmission starts. It will
 //set the D/C line to the value indicated in the user field.
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
 {
-    int dc=(int)t->user;
+    int dc = (int)t->user;
     gpio_set_level(PIN_NUM_DC, dc);
 }
 
 uint32_t lcd_get_id(spi_device_handle_t spi)
 {
     //get_id cmd
-    lcd_cmd( spi, 0x04);
+    lcd_cmd(spi, 0x04);
 
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
-    t.length=8*3;
+    t.length = 8 * 3;
     t.flags = SPI_TRANS_USE_RXDATA;
-    t.user = (void*)1;
+    t.user = (void *)1;
 
     esp_err_t ret = spi_device_transmit(spi, &t);
-    assert( ret == ESP_OK );
+    assert(ret == ESP_OK);
 
-    return *(uint32_t*)t.rx_data;
+    return *(uint32_t *)t.rx_data;
 }
 
 //Initialize the display
 void lcd_init(spi_device_handle_t spi)
 {
-    int cmd=0;
-    const lcd_init_cmd_t* lcd_init_cmds;
+    int cmd = 0;
+    const lcd_init_cmd_t *lcd_init_cmds;
 
     //Initialize non-SPI GPIOs
     gpio_set_direction(PIN_NUM_DC, GPIO_MODE_OUTPUT);
     gpio_set_direction(PIN_NUM_RST, GPIO_MODE_OUTPUT);
     //PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[27], PIN_FUNC_GPIO);
-	gpio_set_direction(17, GPIO_MODE_OUTPUT);
+    #if PIN_NUM_BCKL >= 0
+    gpio_set_direction(PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
+    #endif
 
     //Reset the display
     gpio_set_level(PIN_NUM_RST, 0);
@@ -235,11 +242,11 @@ void lcd_init(spi_device_handle_t spi)
     int lcd_detected_type = 0;
     int lcd_type;
 
-//    printf("LCD ID: %08X\n", lcd_id);
-//    if ( lcd_id == 0 ) {
-        //zero, ili
-        lcd_detected_type = LCD_TYPE_ILI;
-/*        printf("ILI9341 detected.\n");
+    //    printf("LCD ID: %08X\n", lcd_id);
+    //    if ( lcd_id == 0 ) {
+    //zero, ili
+    lcd_detected_type = LCD_TYPE_ILI;
+    /*        printf("ILI9341 detected.\n");
     } else {
         // none-zero, ST
         lcd_detected_type = LCD_TYPE_ST;
@@ -254,29 +261,34 @@ void lcd_init(spi_device_handle_t spi)
 #elif defined( CONFIG_LCD_TYPE_ILI9341 )
     printf("kconfig: force CONFIG_LCD_TYPE_ILI9341.\n");*/
     lcd_type = LCD_TYPE_ILI;
-//#endif
-    if ( lcd_type == LCD_TYPE_ST ) {
+    //#endif
+    if (lcd_type == LCD_TYPE_ST)
+    {
         printf("LCD ST7789V initialization.\n");
         lcd_init_cmds = st_init_cmds;
-    } else {
+    }
+    else
+    {
         printf("LCD ILI9341 initialization.\n");
         lcd_init_cmds = ili_init_cmds;
     }
 
     //Send all the commands
-    while (lcd_init_cmds[cmd].databytes!=0xff) {
+    while (lcd_init_cmds[cmd].databytes != 0xff)
+    {
         lcd_cmd(spi, lcd_init_cmds[cmd].cmd);
-        lcd_data(spi, lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes&0x1F);
-        if (lcd_init_cmds[cmd].databytes&0x80) {
+        lcd_data(spi, lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes & 0x1F);
+        if (lcd_init_cmds[cmd].databytes & 0x80)
+        {
             vTaskDelay(100 / portTICK_RATE_MS);
         }
         cmd++;
     }
+    printf("LCD initialization complete.\n");
 
     ///Enable backlight
     //gpio_set_level(17, 1);
 }
-
 
 //To send a set of lines we have to send a command, 2 data bytes, another command, 2 more data bytes and another command
 //before sending the line data itself; a total of 6 transactions. (We can't put all of this in just one transaction
@@ -292,38 +304,43 @@ static void send_lines(spi_device_handle_t spi, int ypos, uint16_t *linedata)
 
     //In theory, it's better to initialize trans and data only once and hang on to the initialized
     //variables. We allocate them on the stack, so we need to re-init them each call.
-    for (x=0; x<6; x++) {
+    for (x = 0; x < 6; x++)
+    {
         memset(&trans[x], 0, sizeof(spi_transaction_t));
-        if ((x&1)==0) {
+        if ((x & 1) == 0)
+        {
             //Even transfers are commands
-            trans[x].length=8;
-            trans[x].user=(void*)0;
-        } else {
-            //Odd transfers are data
-            trans[x].length=8*4;
-            trans[x].user=(void*)1;
+            trans[x].length = 8;
+            trans[x].user = (void *)0;
         }
-        trans[x].flags=SPI_TRANS_USE_TXDATA;
+        else
+        {
+            //Odd transfers are data
+            trans[x].length = 8 * 4;
+            trans[x].user = (void *)1;
+        }
+        trans[x].flags = SPI_TRANS_USE_TXDATA;
     }
-    trans[0].tx_data[0]=0x2A;           //Column Address Set
-    trans[1].tx_data[0]=0;              //Start Col High
-    trans[1].tx_data[1]=0;              //Start Col Low
-    trans[1].tx_data[2]=(320)>>8;       //End Col High
-    trans[1].tx_data[3]=(320)&0xff;     //End Col Low
-    trans[2].tx_data[0]=0x2B;           //Page address set
-    trans[3].tx_data[0]=ypos>>8;        //Start page high
-    trans[3].tx_data[1]=ypos&0xff;      //start page low
-    trans[3].tx_data[2]=(ypos+PARALLEL_LINES)>>8;    //end page high
-    trans[3].tx_data[3]=(ypos+PARALLEL_LINES)&0xff;  //end page low
-    trans[4].tx_data[0]=0x2C;           //memory write
-    trans[5].tx_buffer=linedata;        //finally send the line data
-    trans[5].length=320*2*8*PARALLEL_LINES;          //Data length, in bits
-    trans[5].flags=0; //undo SPI_TRANS_USE_TXDATA flag
+    trans[0].tx_data[0] = 0x2A;                               //Column Address Set
+    trans[1].tx_data[0] = 0;                                  //Start Col High
+    trans[1].tx_data[1] = 0;                                  //Start Col Low
+    trans[1].tx_data[2] = (320) >> 8;                         //End Col High
+    trans[1].tx_data[3] = (320) & 0xff;                       //End Col Low
+    trans[2].tx_data[0] = 0x2B;                               //Page address set
+    trans[3].tx_data[0] = ypos >> 8;                          //Start page high
+    trans[3].tx_data[1] = ypos & 0xff;                        //start page low
+    trans[3].tx_data[2] = (ypos + FRAMEBUFFER_HEIGHT) >> 8;   //end page high
+    trans[3].tx_data[3] = (ypos + FRAMEBUFFER_HEIGHT) & 0xff; //end page low
+    trans[4].tx_data[0] = 0x2C;                               //memory write
+    trans[5].tx_buffer = linedata;                            //finally send the line data
+    trans[5].length = 320 * 2 * 8 * FRAMEBUFFER_HEIGHT;       //Data length, in bits
+    trans[5].flags = 0;                                       //undo SPI_TRANS_USE_TXDATA flag
 
     //Queue all transactions.
-    for (x=0; x<6; x++) {
-        ret=spi_device_queue_trans(spi, &trans[x], portMAX_DELAY);
-        assert(ret==ESP_OK);
+    for (x = 0; x < 6; x++)
+    {
+        ret = spi_device_queue_trans(spi, &trans[x], portMAX_DELAY);
+        assert(ret == ESP_OK);
     }
 
     //When we are here, the SPI driver is busy (in the background) getting the transactions sent. That happens
@@ -332,134 +349,160 @@ static void send_lines(spi_device_handle_t spi, int ypos, uint16_t *linedata)
     //send_line_finish, which will wait for the transfers to be done and check their status.
 }
 
-
 static void send_line_finish(spi_device_handle_t spi)
 {
     spi_transaction_t *rtrans;
     esp_err_t ret;
     //Wait for all 6 transactions to be done and get back the results.
-    for (int x=0; x<6; x++) {
-        ret=spi_device_get_trans_result(spi, &rtrans, portMAX_DELAY);
-        assert(ret==ESP_OK);
+    for (int x = 0; x < 6; x++)
+    {
+        ret = spi_device_get_trans_result(spi, &rtrans, portMAX_DELAY);
+        assert(ret == ESP_OK);
         //We could inspect rtrans now if we received any info back. The LCD is treated as write-only, though.
     }
 }
 
-
-//Simple routine to generate some patterns and send them to the LCD. Don't expect anything too
-//impressive. Because the SPI driver handles transactions in the background, we can calculate the next line
+//Show menu until a Rom is selected
+//Because the SPI driver handles transactions in the background, we can calculate the next line
 //while the previous one is being sent.
-static int display_pretty_colors(spi_device_handle_t spi)
+static char* selectRomFromMenu(spi_device_handle_t spi)
 {
     uint16_t *lines[2];
     //Allocate memory for the pixel buffers
-    for (int i=0; i<2; i++) {
-        lines[i]=heap_caps_malloc(320*PARALLEL_LINES*sizeof(uint16_t), MALLOC_CAP_DMA);
-        assert(lines[i]!=NULL);
+    for (int i = 0; i < 2; i++)
+    {
+        lines[i] = heap_caps_malloc(320 * FRAMEBUFFER_HEIGHT * sizeof(uint16_t), MALLOC_CAP_DMA);
+        assert(lines[i] != NULL);
     }
-    int frame=0;
-    //Indexes of the line currently being sent to the LCD and the line we're calculating.
-    int sending_line=-1;
-    int calc_line=0;
+    //Double-buffer indexes (sending vs active/drawing)
+    int sendingBufferIdx = -1;
+    int activeBufferIdx = 0;
 
-    while(1) {
-        //gpio_set_level(27, 0);
-		frame++;
-        for (int y=0; y<240; y+=PARALLEL_LINES) {
-            //Calculate a line.
-            pretty_effect_calc_lines(lines[calc_line], y, frame, PARALLEL_LINES);
+    while (1)
+    {
+        for (int y = 0; y < 240; y += FRAMEBUFFER_HEIGHT)
+        {
+            //Draw a framebuffer's worth of graphics
+            drawRows(lines[activeBufferIdx], y, FRAMEBUFFER_HEIGHT);
+            handleUserInput();
             //Finish up the sending process of the previous line, if any
-            if (sending_line!=-1) send_line_finish(spi);
+            if (sendingBufferIdx != -1)
+                send_line_finish(spi);
             //Swap sending_line and calc_line
-            sending_line=calc_line;
-            calc_line=(calc_line==1)?0:1;
+            sendingBufferIdx = activeBufferIdx;
+            activeBufferIdx = 1 - activeBufferIdx;
             //Send the line we currently calculated.
-            send_lines(spi, y, lines[sending_line]);
+            send_lines(spi, y, lines[sendingBufferIdx]);
             //The line set is queued up for sending now; the actual sending happens in the
             //background. We can go on to calculate the next line set as long as we do not
             //touch line[sending_line]; the SPI sending process is still reading from that.
-			if(getSelRom()!=12345){
-				freeMem();
-				return getSelRom();
-			}
-		}
+            if (getSelRom() != NO_ROM_SELECTED)
+            {
+                char* filename = (char *) malloc (FILENAME_LENGTH + 8);
+                filename[0] = '\0';
+                strcat(filename, "/spiffs/");
+                strcat(filename, menuEntries[getSelRom()].fileName);
+                freeMem();
+                for (int i = 0; i < 2; i++)
+                {
+                    heap_caps_free(lines[i]);
+                }
+                return filename;
+            }
+        }
+        vTaskDelay(10);
     }
-	
-	return 0;
+
+    return NULL;
 }
 
-	ledc_channel_config_t ledc_channel;
+ledc_channel_config_t ledc_channel;
 
-void initBl(){
-	ledc_timer_config_t ledc_timer = {
-        .duty_resolution = LEDC_TIMER_3_BIT,
-        .freq_hz = 5*1000*1000,
-        .speed_mode = LEDC_LS_MODE,
-		.timer_num = LEDC_LS_TIMER           
-    };
-    
-    ledc_timer_config(&ledc_timer);
-		
-	ledc_channel.channel    = LEDC_LS_CH3_CHANNEL;
-	//ledc_channel.duty       = 2000;
-	ledc_channel.gpio_num   = PIN_NUM_BCKL;
-	ledc_channel.speed_mode = LEDC_LS_MODE;
-	ledc_channel.timer_sel  = LEDC_LS_TIMER;
-								
-	ledc_channel_config(&ledc_channel);
-}
-
-void setBr(int bright){
-	int duty=1000;
-	if(bright == -2)duty=0;
-	if(bright == 0)duty=1;
-	if(bright == 1)duty=2;
-	if(bright == 2)duty=3;
-	if(bright == 3)duty=4;
-	if(bright == 4)duty=5;
-	ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, duty);
-    ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
-}
-
-int runMenu()
+void initBl()
 {
+    ledc_timer_config_t ledc_timer = {
+        .duty_resolution = LEDC_TIMER_3_BIT,
+        .freq_hz = 5 * 1000 * 1000,
+        .speed_mode = LEDC_LS_MODE,
+        .timer_num = LEDC_LS_TIMER};
+
+    ledc_timer_config(&ledc_timer);
+
+    ledc_channel.channel = LEDC_LS_CH3_CHANNEL;
+    //ledc_channel.duty       = 2000;
+    ledc_channel.gpio_num = PIN_NUM_BCKL;
+    ledc_channel.speed_mode = LEDC_LS_MODE;
+    ledc_channel.timer_sel = LEDC_LS_TIMER;
+
+    #if PIN_NUM_BCKL >= 0
+    ledc_channel_config(&ledc_channel);
+    #endif
+}
+
+void setBr(int bright)
+{
+    int duty = 1000;
+    if (bright == -2)
+        duty = 0;
+    if (bright == 0)
+        duty = 1;
+    if (bright == 1)
+        duty = 2;
+    if (bright == 2)
+        duty = 3;
+    if (bright == 3)
+        duty = 4;
+    if (bright == 4)
+        duty = 5;
+    #if PIN_NUM_BCKL >= 0
+    ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, duty);
+    ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+    #endif
+}
+
+char* runMenu()
+{
+    printf("Init SPI bus\n");
     esp_err_t ret;
     spi_device_handle_t spi;
-    spi_bus_config_t buscfg={
-        .miso_io_num=PIN_NUM_MISO,
-        .mosi_io_num=PIN_NUM_MOSI,
-        .sclk_io_num=PIN_NUM_CLK,
-        .quadwp_io_num=-1,
-        .quadhd_io_num=-1,
-        .max_transfer_sz=PARALLEL_LINES*320*2+8
-    };
-    spi_device_interface_config_t devcfg={
-//#ifdef CONFIG_LCD_OVERCLOCK
-        .clock_speed_hz=30*1000*1000,           //Clock out at 26 MHz
-/*#else
-        .clock_speed_hz=10*1000*1000,           //Clock out at 10 MHz
-#endif*/
-        .mode=0,                                //SPI mode 0
-        .spics_io_num=PIN_NUM_CS,               //CS pin
-        .queue_size=7,                          //We want to be able to queue 7 transactions at a time
-        .pre_cb=lcd_spi_pre_transfer_callback,  //Specify pre-transfer callback to handle D/C line
-    };
+    spi_bus_config_t buscfg = {
+        .miso_io_num = PIN_NUM_MISO,
+        .mosi_io_num = PIN_NUM_MOSI,
+        .sclk_io_num = PIN_NUM_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = FRAMEBUFFER_HEIGHT * 320 * 2 + 8};
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = CONFIG_HW_LCD_CLOCK_SPEED * 1000 * 1000,
+        .mode = 0,                               //SPI mode 0
+        .spics_io_num = PIN_NUM_CS,              //CS pin
+        .queue_size = 14,                         //We want to be able to queue 7 transactions at a time
+        .pre_cb = lcd_spi_pre_transfer_callback, //Specify pre-transfer callback to handle D/C line
+        .flags = SPI_DEVICE_NO_DUMMY};
     //Initialize the SPI bus
-    ret=spi_bus_initialize(HSPI_HOST, &buscfg, 1);
+    ret = spi_bus_initialize(VSPI_HOST, &buscfg, 1);
+    printf("Init SPI bus completed\n");
     ESP_ERROR_CHECK(ret);
     //Attach the LCD to the SPI bus
-    ret=spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    printf("Adding screen device\n");
+    ret = spi_bus_add_device(VSPI_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
+    printf("Adding screen completed\n");
     //Initialize the LCD
     lcd_init(spi);
-    //Initialize the effect displayed
-    ret=pretty_effect_init();
+    printf("Start boot menu init\n");
+    //Initialize the menu screen
+    ret = menuInit();
+    printf("Finished boot menu init\n");
     ESP_ERROR_CHECK(ret);
+    printf("No error so going on\n");    
 
-    //Go do nice stuff.
-	setSelRom(12345);
-    //gpio_set_level(27, 1);
-	initBl();
-	setBr(2);
-	return display_pretty_colors(spi);
+    initBl();
+    setBr(2);
+    //Show splash screen and prompt user to select something
+    printf("Showing boot menu\n");
+    setSelRom(NO_ROM_SELECTED);
+    char* filename = selectRomFromMenu(spi);
+    printf("Menu selection is %s\n", filename);
+    return filename;
 }

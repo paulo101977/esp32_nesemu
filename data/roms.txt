@@ -1,20 +1,20 @@
-No.	Icon Name
-1.	$	YourRom1
-2.	%	Your Rom 2
-3.	"	Your-Rom, 3
-4.	=	4
-5.	+	5
-6.	}	6
-7.	{	7
-8.	;	8
-9.	}	9
-10.	}	10
+No.	Icon	Name	Filename
+1.	$	Super Mario Bros 1	smb1.nes
+2.	"	Super Mario Bros 3	smb3.nes
+3.	;	Tetris	tetris.nes
+4.	=	Legend of Zelda	zelda1.nes
+5.	+	Adventure of Link	zelda2.nes
+6.	}	Galaga	galaga.nes
+7.	;	Metroid	metroid.nes
 *#*
-11.	/	11
-12.	;	12
 13.	;	13
 14.	;	14
 
+2.	%	Super Mario Bros 2  smb2.nes
+7.	/	Contra  contra.nes
+10.	$	Castlevania cv1.nes
+11.	/	Simon's Quest   cv2.nes 
+12.	{	Bubble Bobble   bubble.nes
 
 
 #	Don't change the Layout, otherwise the Menu won't show up

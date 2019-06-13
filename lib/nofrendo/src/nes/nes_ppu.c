@@ -130,6 +130,7 @@ ppu_t *ppu_create(void)
       return NULL;
 
    memset(temp, 0, sizeof(ppu_t));
+   printf("PPU memory allocated and cleared\n");
 
    temp->latchfunc = NULL;
    temp->vromswitch = NULL;

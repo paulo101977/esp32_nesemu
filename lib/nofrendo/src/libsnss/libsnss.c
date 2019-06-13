@@ -182,7 +182,9 @@ SNSS_WriteFileHeader (SNSS_FILE *snssFile)
    char writeBuffer[8];
 
    /* always place the SNSS tag in this field */
-   strncpy (&writeBuffer[0], "SNSS", 4);
+   //strncpy (&writeBuffer[0], "SNSS", 4);
+   writeBuffer[0] = writeBuffer[2] = writeBuffer[3] = 'S';
+   writeBuffer[1] = 'N';
    tempInt = swap32 (snssFile->headerBlock.numberOfBlocks);
    writeBuffer[4] = ((char *) &tempInt)[0];
    writeBuffer[5] = ((char *) &tempInt)[1];

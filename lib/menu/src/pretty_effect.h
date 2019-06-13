@@ -4,22 +4,22 @@
 
 
 /**
- * @brief Calculate the effect for a bunch of lines.
+ * @brief Calculate and disaply a set of rows to the screen
  *
  * @param dest Destination for the pixels. Assumed to be LINECT * 320 16-bit pixel values.
- * @param line Starting line of the chunk of lines.
- * @param frame Current frame, used for animation
- * @param linect Amount of lines to calculate
+ * @param y Starting y coordinate of the chunk of lines.
+ * @param rowCount Amount of lines to calculate
  */
-void pretty_effect_calc_lines(uint16_t *dest, int line, int frame, int linect);
+void drawRows(uint16_t *dest, int y, int rowCount);
 
+void handleUserInput();
 
 /**
- * @brief Initialize the effect
+ * @brief Initialize the boot screen and menu
  *
  * @return ESP_OK on success, an error from the jpeg decoder otherwise.
  */
-esp_err_t pretty_effect_init();
+esp_err_t menuInit();
 
 bool peGetPixel(char peChar, int pe1, int pe2);
 

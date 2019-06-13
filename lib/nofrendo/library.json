@@ -1,0 +1,43 @@
+{
+    "name": "Nofrendo",
+    "description": "Nofrendo emulator core",
+    "keywords": "nes, nintendo, nofrendo",
+    "authors":
+    {
+        "name": "TODO:Fill this in",
+        "email": "",
+        "url": ""
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/stanleyhuangyc/Freematics.git"
+    },
+    "export":{
+        "include":[
+            "src/*",
+            "src/nes/*",
+            "src/esp32/*"
+        ]
+    },
+    "srcFilter": [
+        "+<*>",
+        "+<cpu/*>",
+        "+<libsnss/*>",
+        "+<mappers/*>",
+        "+<nes/*>",
+        "+<sndhrdw/*>",
+        "+<esp32/*>"
+    ],
+    "build":{
+        "flags":[
+            "-Isrc/cpu",
+            "-Isrc/libsnss",
+            "-Isrc/mappers",
+            "-Isrc/nes",
+            "-Isrc/sndhrdw",
+            "-Isrc/esp32"
+        ]
+    },
+    "frameworks": "*",
+    "platforms": "*"
+  }
