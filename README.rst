@@ -46,32 +46,19 @@ Also connect the power supply and ground. For now, the LCD is controlled using a
 
 GPIO Controller
 ---------------
-
-    -DCONFIG_HW_GPIO_START=1
-    -DCONFIG_HW_GPIO_SELECT=1
-    -DCONFIG_HW_GPIO_UP=1
-    -DCONFIG_HW_GPIO_DOWN=1
-    -DCONFIG_HW_GPIO_LEFT=1
-    -DCONFIG_HW_GPIO_RIGHT=1
-    -DCONFIG_HW_GPIO_B=1
-    -DCONFIG_HW_GPIO_A=1
-    #Also referred to as Button 2
-    -DCONFIG_HW_GPIO_MENU=1
-    #Also referred to as Button 1
-    -DCONFIG_HW_GPIO_BRIGHTNESS=1
-
-	| Button | GPIO CONSTANT		|
-	| ---    | -------------------- 	|
-        | UP	 | CONFIG_HW_GPIO_UP		|
-	| DOWN   | CONFIG_HW_GPIO_DOWN		|
-	| RIGHT  | CONFIG_HW_GPIO_RIGHT		|
-	| LEFT   | CONFIG_HW_GPIO_RIGHT		|
-	| SELECT | CONFIG_HW_GPIO_SELECT	|
-	| START  | CONFIG_HW_GPIO_START		|
-	| B	 | CONFIG_HW_GPIO_B		|
-	| A	 | CONFIG_HW_GPIO_A		|
-	| ON/OFF | ?? did I break this? 	|
-	| MENU	 | CONFIG_HW_GPIO_MENU		|
+   ======   ===============================
+   Button   GPIO CONSTANT
+   ======   ===============================
+   UP       CONFIG_HW_GPIO_UP
+   DOWN     CONFIG_HW_GPIO_DOWN
+   RIGHT    CONFIG_HW_GPIO_RIGHT
+   LEFT     CONFIG_HW_GPIO_RIGHT
+   SELECT   CONFIG_HW_GPIO_SELECT
+   START    CONFIG_HW_GPIO_START
+   B        CONFIG_HW_GPIO_B
+   A        CONFIG_HW_GPIO_A
+   ON/OFF   TBD
+   MENU     CONFIG_HW_GPIO_MENU
 
 Connect also 3.3V to the Buttons
 
