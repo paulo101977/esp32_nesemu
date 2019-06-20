@@ -3,7 +3,7 @@ ESP32-NESEMU, a Nintendo Entertainment System emulator for the ESP32
 
 This is a much-needed cleanup of the the quick and dirty port of Nofrendo, a Nintendo Entertainment System emulator (original by Espressif, https://github.com/espressif/esp32-nesemu).
 
-I am improving on the PrettyEffect menu that MittisBootloop created as well.  His in-game menu is so nicely done I will do what I can to preserve that feature as I add more in-game stuff.
+I am improving on the PrettyEffect menu that MittisBootloop created as well.  His in-game menu is so nicely done I will do what I can to preserve that feature as I add more in-game stuff.  Currently I have added SRAM support for save games as well as speed-adjustable turbo buttons.
 
 Caution: Fullscreen can cause graphical glitches and it has bad sound.
 
@@ -56,16 +56,18 @@ To enable GPIO control, define the CONFIG_HW_CONTROLLER_GPIO constant and undefi
    ======   ===============================
    Button   GPIO CONSTANT
    ======   ===============================
-   UP       CONFIG_HW_GPIO_UP
-   DOWN     CONFIG_HW_GPIO_DOWN
-   RIGHT    CONFIG_HW_GPIO_RIGHT
-   LEFT     CONFIG_HW_GPIO_RIGHT
-   SELECT   CONFIG_HW_GPIO_SELECT
-   START    CONFIG_HW_GPIO_START
+   Up       CONFIG_HW_GPIO_UP
+   Down     CONFIG_HW_GPIO_DOWN
+   Right    CONFIG_HW_GPIO_RIGHT
+   Left     CONFIG_HW_GPIO_RIGHT
+   Select   CONFIG_HW_GPIO_SELECT
+   Start    CONFIG_HW_GPIO_START
    B        CONFIG_HW_GPIO_B
    A        CONFIG_HW_GPIO_A
-   ON/OFF   TBD
-   MENU     CONFIG_HW_GPIO_MENU
+   TurboB   CONFIG_HW_GPIO_TURBO_B
+   TurboA   CONFIG_HW_GPIO_TURBO_A
+   Power    CONFIG_HW_GPIO_POWER *currently not working
+   Menu     CONFIG_HW_GPIO_MENU
    ======   ===============================
 
 Connect also 3.3V to the Buttons
@@ -82,6 +84,11 @@ This includes no Roms. You'll have to flash your own Roms and modify the roms.tx
 Don't change format used in roms.txt because you might cause the menu to load incorrectly.  Review the file for further instructions.
 
 Use the Platform.IO task for uploading the SPIFFS volume in order to upload roms.txt and rom files.
+
+Adjusting in-game settings
+--------------------------
+
+After booting a game, press the menu button for the in-game menu.  Press the button again to close the menu after making any changes.
 
 Copyright
 ---------
