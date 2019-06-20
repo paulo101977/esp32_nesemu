@@ -428,7 +428,17 @@ static void spi_master_init()
 
 extern uint16_t myPalette[];
 
-char *menuText[10] = {"brightness46  0.", "volume82      9.", " .", "hor stretch1  5.", "vert stretch3 7.", " .", "  stretch can.", " cause graphic.", "   problems!.", "*"};
+char *menuText[10] = {
+    "Brightness 46 0.", 
+    "Volume     82 9.", 
+    " .", 
+    "Turbo  3 $  1 @.", 
+    " .", 
+    "These cause lag.",
+    "Horiz Scale 1 5.", 
+    "Vert Scale  3 7.", 
+    " .", 
+    "*"};
 bool arrow[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
                     {0, 0, 0, 0, 1, 0, 0, 0, 0},
                     {0, 0, 0, 1, 1, 1, 0, 0, 0},
@@ -649,6 +659,42 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
                                     if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < getVolume() * 2)
                                         x1 = y1 = 0xFFFF;
                                     else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= getVolume() * 2)
+                                        x1 = y1 = 0xDDDD;
+                                    else
+                                        x1 = y1 = 0x0F;
+                                }
+                            }
+                            else if (actChar == '@')
+                            {
+                                if (getTurboA() == 0 && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
+                                    x1 = y1 = 31 * 1024 + 0x8000;
+                                else
+                                    x1 = y1 = 0x0F;
+                                ;
+
+                                if (getTurboA() > 0)
+                                {
+                                    if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < (getTurboA() * 2 -1))
+                                        x1 = y1 = 0xFFFF;
+                                    else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= (getTurboA() * 2 -1))
+                                        x1 = y1 = 0xDDDD;
+                                    else
+                                        x1 = y1 = 0x0F;
+                                }
+                            }
+                            else if (actChar == '$')
+                            {
+                                if (getTurboB() == 0 && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
+                                    x1 = y1 = 31 * 1024 + 0x8000;
+                                else
+                                    x1 = y1 = 0x0F;
+                                ;
+
+                                if (getTurboB() > 0)
+                                {
+                                    if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < (getTurboB() * 2 -1))
+                                        x1 = y1 = 0xFFFF;
+                                    else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= (getTurboB() * 2 -1))
                                         x1 = y1 = 0xDDDD;
                                     else
                                         x1 = y1 = 0x0F;

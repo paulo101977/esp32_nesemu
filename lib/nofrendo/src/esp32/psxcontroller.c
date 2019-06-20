@@ -99,24 +99,29 @@ bool getShowMenu()
 //SLCT           STRT UP   RGHT DOWN LEFT
 //Bit8 Bit9 Bt10 Bt11 Bt12 Bt13 Bt14 Bt15
 //L2   R2   L1   R1    /\   O    X   |_|
+// NOTE: These mappings aren't reflected in video_audio.c
+// any changes have to be reflected in osd_getinput
+// TODO: Make these both work together
 #define PSX_SELECT 1
-#define PSX_START 1 << 3
-#define PSX_UP 1 << 4
-#define PSX_RIGHT 1 << 5
-#define PSX_DOWN 1 << 6
-#define PSX_LEFT 1 << 7
-#define PSX_L2 1 << 8
-#define PSX_R2 1 << 9
-#define PSX_L1 1 << 10
-#define PSX_R1 1 << 11
-#define PSX_TRIANGLE 1 << 12
-#define PSX_CIRCLE 1 << 13
-#define PSX_X 1 << 14
-#define PSX_SQUARE 1 << 15
+#define PSX_START (1 << 3)
+#define PSX_UP (1 << 4)
+#define PSX_RIGHT (1 << 5)
+#define PSX_DOWN (1 << 6)
+#define PSX_LEFT (1 << 7)
+#define PSX_L2 (1 << 8)
+#define PSX_R2 (1 << 9)
+#define PSX_L1 (1 << 10)
+#define PSX_R1 (1 << 11)
+#define PSX_TRIANGLE (1 << 12)
+#define PSX_CIRCLE (1 << 13)
+#define PSX_X (1 << 14)
+#define PSX_SQUARE (1 << 15)
 #define A_BUTTON PSX_CIRCLE
 #define B_BUTTON PSX_X
-#define MENU_BUTTON PSX_TRIANGLE
-#define BRIGHTNESS_BUTTON PSX_SQUARE
+#define TURBO_A_BUTTON PSX_TRIANGLE
+#define TURBO_B_BUTTON PSX_SQUARE
+#define MENU_BUTTON PSX_L1
+#define POWER_BUTTON PSX_R1
 
 bool isSelectPressed(int ctl)
 {
@@ -150,25 +155,55 @@ bool isBPressed(int ctl)
 {
 	return !(ctl & B_BUTTON);
 }
+bool isTurboAPressed(int ctl)
+{
+	return !(ctl & TURBO_A_BUTTON);
+}
+bool isTurboBPressed(int ctl)
+{
+	return !(ctl & TURBO_B_BUTTON);
+}
 bool isMenuPressed(int ctl)
 {
 	return !(ctl & MENU_BUTTON);
 }
-bool isBrightnessPressed(int ctl)
+bool isPowerPressed(int ctl)
 {
-	return !(ctl & BRIGHTNESS_BUTTON);
+	return !(ctl & POWER_BUTTON);
 }
-bool isAnyDirectionPressed(int ctl) {
+bool isAnyDirectionPressed(int ctl)
+{
 	return isUpPressed(ctl) || isDownPressed(ctl) || isLeftPressed(ctl) || isRightPressed(ctl);
 }
 
-bool isAnyActionPressed(int ctl) {
-	return isStartPressed(ctl) || isSelectPressed(ctl) || isMenuPressed(ctl) || isBrightnessPressed(ctl);
+bool isAnyActionPressed(int ctl)
+{
+	return isStartPressed(ctl) || isSelectPressed(ctl) || isMenuPressed(ctl) || isPowerPressed(ctl);
+}
+
+bool isAnyFirePressed(int ctl)
+{
+	return isAPressed(ctl) || isBPressed(ctl) || isTurboAPressed(ctl) || isTurboBPressed(ctl);
 }
 
 bool isAnyPressed(int ctl)
 {
-	return isAnyDirectionPressed(ctl) || isAnyActionPressed(ctl) || isAPressed(ctl) || isBPressed(ctl);
+	return isAnyDirectionPressed(ctl) || isAnyActionPressed(ctl) || isAnyFirePressed(ctl);
+}
+
+int turboACounter = 0;
+int turboBCounter = 0;
+int turboASpeed = 3;
+int turboBSpeed = 3;
+int MAX_TURBO = 6;
+int TURBO_COUNTER_RESET = 210;
+
+int getTurboA() {
+	return turboASpeed;
+}
+
+int getTurboB() {
+	return turboBSpeed;
 }
 
 int psxReadInput()
@@ -202,64 +237,105 @@ int psxReadInput()
 		b2b1 -= B_BUTTON;
 	if (gpio_get_level(CONFIG_HW_GPIO_A) == 1)
 		b2b1 -= A_BUTTON;
+	if (gpio_get_level(CONFIG_HW_GPIO_TURBO_B) == 1)
+		b2b1 -= TURBO_B_BUTTON;
+	if (gpio_get_level(CONFIG_HW_GPIO_TURBO_A) == 1)
+		b2b1 -= TURBO_A_BUTTON;
 	if (gpio_get_level(CONFIG_HW_GPIO_MENU) == 1)
 		b2b1 -= MENU_BUTTON;
-	if (gpio_get_level(CONFIG_HW_GPIO_BRIGHTNESS) == 1)
-		b2b1 -= BRIGHTNESS_BUTTON;
+	if (gpio_get_level(CONFIG_HW_GPIO_POWER) == 1)
+		b2b1 -= POWER_BUTTON;
 #endif
-	if (showMenu && inpDelay == 0)
+	if (isMenuPressed(b2b1) && inpDelay == 0)
 	{
-		if (isUpPressed(b2b1) && volume < 4)
-			volume++;
-		if (isDownPressed(b2b1) && volume > 0)
-			volume--;
-		if (isRightPressed(b2b1) && bright < 4)
-			bright++;
-		if (isLeftPressed(b2b1) && bright > 0)
-			bright--;
-		if (isAPressed(b2b1))
-			setYStretch(1 - getYStretch());
-		if (isBPressed(b2b1))
-			setXStretch(1 - getXStretch());
-		if (isAnyPressed(b2b1))
-			inpDelay = 15;
+		showMenu = !showMenu;
+		inpDelay = 20;
+	}
+	if (showMenu)
+	{
+		if (inpDelay == 0)
+		{
+			if (isUpPressed(b2b1) && volume < 4)
+				volume++;
+			if (isDownPressed(b2b1) && volume > 0)
+				volume--;
+			if (isRightPressed(b2b1) && bright < 4)
+				bright++;
+			if (isLeftPressed(b2b1) && bright > 0)
+				bright--;
+			if (isAPressed(b2b1))
+				setYStretch(1 - getYStretch());
+			if (isBPressed(b2b1))
+				setXStretch(1 - getXStretch());
+			if (isTurboAPressed(b2b1))
+				turboASpeed = (turboASpeed + 1) % MAX_TURBO;
+			if (isTurboBPressed(b2b1))
+				turboBSpeed = (turboBSpeed + 1) % MAX_TURBO;
+			if (isAnyPressed(b2b1))
+				inpDelay = 15;
+		}
 	}
 	else
 	{
-		if (isBrightnessPressed(b2b1) && inpDelay > 0)
+		// ! todo: Implement sleep mode for PSX that also works with GPIO code here, disabled for now.
+		/* 
+		if (isPowerPressed(b2b1) && inpDelay > 0)
 			bright = -1;
 		if (bright < 0)
 		{
-			// ! todo: Implement sleep mode for PSX
-			/*
-	if (bright == -1 && inpDelay == 0)
-	{
-		esp_sleep_enable_timer_wakeup(1000 * 100);
-		vTaskDelay(100);
-		esp_deep_sleep_start();
-	}
+			if (bright == -1 && inpDelay == 0)
+			{
+				esp_sleep_enable_timer_wakeup(1000 * 100);
+				vTaskDelay(100);
+				esp_deep_sleep_start();
+			}
 
-	if (bright == -1 && inpDelay > 100)
-	{
-		bright = -2;
-		shutdown = 1;
-		esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_AUTO);
-		gpio_pullup_dis(CONFIG_HW_GPIO_BRIGHTNESS);
-		gpio_pulldown_en(CONFIG_HW_GPIO_BRIGHTNESS);
-		esp_deep_sleep_enable_ext0_wakeup(CONFIG_HW_GPIO_BRIGHTNESS, 1);
+			if (bright == -1 && inpDelay > 100)
+			{
+				bright = -2;
+				shutdown = 1;
+				esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_AUTO);
+				gpio_pullup_dis(CONFIG_HW_GPIO_POWER);
+				gpio_pulldown_en(CONFIG_HW_GPIO_POWER);
+				esp_deep_sleep_enable_ext0_wakeup(CONFIG_HW_GPIO_POWER, 1);
 
-		vTaskDelay(1500);
-		esp_deep_sleep_start();
-	}			
-			*/
+				vTaskDelay(1500);
+				esp_deep_sleep_start();
+			}
 			bright = 4;
 		}
 		inpDelay += 2;
+		*/
 	}
-	if (isMenuPressed(b2b1) && inpDelay > 0)
+	if (!showMenu)
 	{
-		showMenu = 1 - showMenu;
-		inpDelay = 15;
+		if (turboASpeed > 0 && isTurboAPressed(b2b1))
+		{
+			b2b1 |= A_BUTTON;
+			if ((turboACounter % (turboASpeed*2)) == 0)
+			{
+				b2b1 -= A_BUTTON;
+			}
+			turboACounter = (turboACounter + 1) % TURBO_COUNTER_RESET; // 30 is the LCM of numers 1 thru 6
+		}
+		else
+		{
+			turboACounter = 0;
+		}
+
+		if (turboBSpeed > 0 && isTurboBPressed(b2b1))
+		{
+			b2b1 |= B_BUTTON;
+			if ((turboBCounter % (turboBSpeed*2)) == 0)
+			{
+				b2b1 -= B_BUTTON;
+			}
+			turboBCounter = (turboBCounter + 1) % TURBO_COUNTER_RESET; // 30 is the LCM of numers 1 thru 6
+		}
+		else
+		{
+			turboBCounter = 0;
+		}
 	}
 	return b2b1;
 }
@@ -291,8 +367,10 @@ void psxcontrollerInit()
 	initGPIO(CONFIG_HW_GPIO_RIGHT);
 	initGPIO(CONFIG_HW_GPIO_B);
 	initGPIO(CONFIG_HW_GPIO_A);
+	initGPIO(CONFIG_HW_GPIO_TURBO_B);
+	initGPIO(CONFIG_HW_GPIO_TURBO_A);
 	initGPIO(CONFIG_HW_GPIO_MENU);
-	initGPIO(CONFIG_HW_GPIO_BRIGHTNESS);
+	initGPIO(CONFIG_HW_GPIO_POWER);
 	printf("GPIO Control initated\n");
 #else
 	volatile int delay;

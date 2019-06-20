@@ -277,9 +277,10 @@ static void osd_initinput()
 
 void osd_getinput(void)
 {
+	// Note: These are in the order of PSX controller bitmasks (see psxcontroller.c)
 	const int ev[16]={
 			event_joypad1_select,0,0,event_joypad1_start,event_joypad1_up,event_joypad1_right,event_joypad1_down,event_joypad1_left,
-			0,0,0,0,event_soft_reset,event_joypad1_a,event_joypad1_b,event_hard_reset
+			0,event_hard_reset,0,event_soft_reset,0,event_joypad1_a,event_joypad1_b,0
 		};
 	static int oldb=0xffff;
 	int b=psxReadInput();

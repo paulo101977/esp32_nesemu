@@ -15,8 +15,13 @@ bool isDownPressed(int ctl);
 bool isLeftPressed(int ctl);
 bool isAPressed(int ctl);
 bool isBPressed(int ctl);
+bool isTurboAPressed(int ctl);
+bool isTurboBPressed(int ctl);
 bool isMenuPressed(int ctl);
-bool isBrightnessPressed(int ctl);
+bool isPowerPressed(int ctl);
 bool isAnyPressed(int ctl);
+bool isAnyFirePressed(int ctl);
+int getTurboA();
+int getTurboB();
 
 #endif
