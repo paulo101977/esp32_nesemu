@@ -132,7 +132,7 @@ static int32 vrcvi_process(void)
 }
 
 /* write to registers */
-static void vrcvi_write(uint32 address, uint8 value)
+static int vrcvi_write(uint32 address, uint8 value)
 {
    int chan = (address >> 12) - 9;
 
@@ -177,6 +177,7 @@ static void vrcvi_write(uint32 address, uint8 value)
    default:
       break;
    }
+   return 0;
 }
 
 /* reset state of vrcvi sound channels */

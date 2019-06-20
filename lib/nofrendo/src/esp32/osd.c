@@ -28,6 +28,7 @@
 
 #include <version.h>
 
+extern char* selectedRomFilename;
 char configfilename[]="na";
 
 /* This is os-specific part of main() */
@@ -35,7 +36,8 @@ int osd_main(int argc, char *argv[])
 {
    config.filename = configfilename;
 
-   return main_loop("rom", system_autodetect);
+   printf("Starting main loop with file: %s\n", selectedRomFilename);
+   return main_loop(selectedRomFilename, system_autodetect);
 }
 
 /* File system interface */
@@ -44,10 +46,16 @@ void osd_fullname(char *fullname, const char *shortname)
    strncpy(fullname, shortname, PATH_MAX);
 }
 
-/* This gives filenames for storage of saves */
-char *osd_newextension(char *string, char *ext)
+/* This gives filenames for storage of saves; DESTRUCTIVE */
+char *osd_newextension(char *name, char *ext)
 {
-   return string;
+   int len=strlen(name);
+   name[len-4] = ext[0];
+   name[len-3] = ext[1];
+   name[len-2] = ext[2];
+   name[len-1] = ext[3];
+   
+   return name;
 }
 
 /* This gives filenames for storage of PCX snapshots */

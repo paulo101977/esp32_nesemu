@@ -183,7 +183,7 @@ typedef struct
 typedef struct
 {
    uint32 min_range, max_range;
-   void (*write_func)(uint32 address, uint8 value);
+   int (*write_func)(uint32 address, uint8 value);
 } apu_memwrite;
 
 /* external sound chip stuff */
@@ -248,7 +248,7 @@ extern void apu_setfilter(int filter_type);
 extern void apu_setchan(int chan, bool enabled);
 
 extern uint8 apu_read(uint32 address);
-extern void apu_write(uint32 address, uint8 value);
+extern int apu_write(uint32 address, uint8 value);
 
 
 #ifdef __cplusplus

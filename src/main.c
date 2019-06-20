@@ -14,7 +14,7 @@
 #define READ_BUFFER_SIZE 64
 
 int selectedRomIdx;
-char *filename;
+char *selectedRomFilename;
 
 char *osd_getromdata()
 {
@@ -29,12 +29,12 @@ char *osd_getromdata()
 		printf("Couldn't find rom partition!\n");
 
 	// Open the file
-	printf("Reading rom from %s\n", filename);
-	FILE *rom = fopen(filename, "r");
+	printf("Reading rom from %s\n", selectedRomFilename);
+	FILE *rom = fopen(selectedRomFilename, "r");
 	long fileSize = -1;
 	if (!rom)
 	{
-		printf("Could not read %s\n", filename);
+		printf("Could not read %s\n", selectedRomFilename);
 		exit(1);
 	}
 
@@ -127,7 +127,7 @@ int app_main(void)
 		exit(1);
 	}
 	psxcontrollerInit();
-	filename = runMenu();
+	selectedRomFilename = runMenu();
 	printf("NoFrendo start!\n");
 	nofrendo_main(0, NULL);
 	printf("NoFrendo died? WtF?\n");

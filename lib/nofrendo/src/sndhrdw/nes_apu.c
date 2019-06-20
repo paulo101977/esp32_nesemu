@@ -608,7 +608,7 @@ static int32 apu_dmc(void)
 }
 
 
-void apu_write(uint32 address, uint8 value)
+int apu_write(uint32 address, uint8 value)
 {  
    int chan;
 
@@ -822,6 +822,7 @@ void apu_write(uint32 address, uint8 value)
    default:
       break;
    }
+   return 0;
 }
 
 /* Read from $4000-$4017 */

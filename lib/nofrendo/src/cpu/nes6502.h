@@ -73,7 +73,7 @@ typedef struct
 typedef struct
 {
    uint32 min_range, max_range;
-   void (*write_func)(uint32 address, uint8 value);
+   int (*write_func)(uint32 address, uint8 value);
 } nes6502_memwrite;
 
 typedef struct

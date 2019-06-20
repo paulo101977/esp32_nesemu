@@ -1247,8 +1247,9 @@ static void mem_writebyte(uint32 address, uint8 value)
       {
          if (address >= mw->min_range && address <= mw->max_range)
          {
-            mw->write_func(address, value);
-            return;
+            if (!(mw->write_func(address, value))) {
+               return;
+            }
          }
       }
    }

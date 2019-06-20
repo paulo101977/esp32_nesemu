@@ -143,9 +143,9 @@ extern void ppu_destroy(ppu_t **ppu);
 
 /* IO */
 extern uint8 ppu_read(uint32 address);
-extern void ppu_write(uint32 address, uint8 value);
+extern int ppu_write(uint32 address, uint8 value);
 extern uint8 ppu_readhigh(uint32 address);
-extern void ppu_writehigh(uint32 address, uint8 value);
+extern int ppu_writehigh(uint32 address, uint8 value);
 
 /* rendering */
 extern void ppu_setpal(ppu_t *src_ppu, rgb_t *pal);

@@ -93,16 +93,24 @@ static uint8 ram_read(uint32 address)
    return nes.cpu->mem_page[0][address & (NES_RAMSIZE - 1)];
 }
 
-static void ram_write(uint32 address, uint8 value)
+static int ram_write(uint32 address, uint8 value)
 {
    nes.cpu->mem_page[0][address & (NES_RAMSIZE - 1)] = value;
+   return 0;
 }
 
-static void write_protect(uint32 address, uint8 value)
+static int trigger_sram_save(uint32 address, uint8 value)
+{
+   nes.saveSramCountdown = 2;
+   return 1;
+}
+
+static int write_protect(uint32 address, uint8 value)
 {
    /* don't allow write to go through */
    UNUSED(address);
    UNUSED(value);
+   return 0;
 }
 
 static uint8 read_protect(uint32 address)
@@ -241,6 +249,13 @@ static void build_address_handlers(nes_t *machine)
    machine->writehandler[num_handlers].max_range = 0xFFFF;
    machine->writehandler[num_handlers].write_func = write_protect;
    num_handlers++;
+   if (machine->rominfo->sram) {
+      // TODO: If there is SRAM present, catch writes the sav file can be updated
+      machine->writehandler[num_handlers].min_range = 0x6000;
+      machine->writehandler[num_handlers].max_range = 0x7fff;
+      machine->writehandler[num_handlers].write_func = trigger_sram_save;
+      num_handlers++;
+   }
    machine->writehandler[num_handlers].min_range = -1;
    machine->writehandler[num_handlers].max_range = -1;
    machine->writehandler[num_handlers].write_func = NULL;
@@ -332,6 +347,14 @@ static void nes_renderframe(bool draw_flag)
       nes.scanline++;
    }
 
+   if (nes.saveSramCountdown > 0) {
+      nes.saveSramCountdown = nes.saveSramCountdown - 1;
+      if (nes.saveSramCountdown == 0) {
+         printf("Saving SRAM...\n");
+         rom_savesram(nes.rominfo);
+         printf("SRAM saved!\n");
+      }
+   }
    nes.scanline = 0;
 }
 
@@ -484,6 +507,7 @@ int nes_insertcart(const char *filename, nes_t *machine)
    /* map cart's SRAM to CPU $6000-$7FFF */
    if (machine->rominfo->sram)
    {
+      printf("SRAM Present\n");
       machine->cpu->mem_page[6] = machine->rominfo->sram;
       machine->cpu->mem_page[7] = machine->rominfo->sram + 0x1000;
    }
@@ -494,8 +518,10 @@ int nes_insertcart(const char *filename, nes_t *machine)
       goto _fail;
 
    /* if there's VRAM, let the PPU know */
-   if (NULL != machine->rominfo->vram)
+   if (NULL != machine->rominfo->vram) {
+      printf("VRAM Present\n");
       machine->ppu->vram_present = true;
+   }
    
    apu_setext(machine->apu, machine->mmc->intf->sound_ext);
    

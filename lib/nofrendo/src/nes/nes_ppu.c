@@ -286,7 +286,7 @@ static void ppu_oamdma(uint8 value)
 }
 
 /* TODO: this isn't the PPU! */
-void ppu_writehigh(uint32 address, uint8 value)
+int ppu_writehigh(uint32 address, uint8 value)
 {
    switch (address)
    {
@@ -315,6 +315,7 @@ void ppu_writehigh(uint32 address, uint8 value)
    default:
       break;
    }
+   return 0;
 }
 
 /* TODO: this isn't the PPU! */
@@ -403,7 +404,7 @@ uint8 ppu_read(uint32 address)
 }
 
 /* Write to $2000-$2007 */
-void ppu_write(uint32 address, uint8 value)
+int ppu_write(uint32 address, uint8 value)
 {
    /* write goes into ppu latch... */
    ppu.latch = value;
@@ -522,6 +523,7 @@ void ppu_write(uint32 address, uint8 value)
    default:
       break;
    }
+   return 0;
 }
 
 /* Builds a 256 color 8-bit palette based on a 64-color NES palette
