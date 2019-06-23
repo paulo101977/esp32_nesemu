@@ -91,9 +91,7 @@ typedef struct nes_s
 
    /* SRAM counter, setting above 0 triggers save after N frames */
    int saveSramCountdown;
-
 } nes_t;
-
 
 extern int nes_isourfile(const char *filename);
 

@@ -29,6 +29,7 @@
 #include "psxcontroller.h"
 #include "driver/ledc.h"
 #include "pretty_effect.h"
+#include "nes.h"
 
 #define PIN_NUM_MISO CONFIG_HW_LCD_MISO_GPIO
 #define PIN_NUM_MOSI CONFIG_HW_LCD_MOSI_GPIO
@@ -617,18 +618,64 @@ static uint16_t renderInGameMenu(int x, int y, uint16_t x1, uint16_t y1, bool xS
     return 0x0F;
 }
 
+uint16_t rowCrc[NES_SCREEN_HEIGHT];
+uint16_t scaleX[320];
+uint16_t scaleY[240];
+static int calcCrc(const uint8_t *row)
+{
+    int crc = 0;
+    int tmp;
+    for (int i = 0; i < 256; i++)
+    {
+        tmp = ((crc >> 8) ^ row[i]) & 0xff;
+        tmp ^= tmp >> 4;
+        crc = (crc << 8) ^ (tmp << 12) ^ (tmp << 5) ^ tmp;
+        crc &= 0xffff;
+    }
+    return crc;
+}
+
+static int lastShowMenu = 0;
 void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t width, const uint16_t height, const uint8_t *data[],
                          bool xStr, bool yStr)
 {
     int x, y;
+    int xx, yy;
     int i;
-    uint16_t x1, y1;
+    uint16_t x1, y1, evenPixel, oddPixel;
     uint32_t xv, yv, dc;
     uint32_t temp[16];
+    if (data == NULL)
+        return;
+
     dc = (1 << PIN_NUM_DC);
+
+    if (getShowMenu() != lastShowMenu) {
+        memset(rowCrc, 0, sizeof rowCrc);
+    }
+    lastShowMenu = getShowMenu();
+
+    int lastY = -1;
+    int lastYshown = 0;
 
     for (y = 0; y < height; y++)
     {
+        yy = yStr ? scaleY[y] : y;
+        if (lastY == yy) {
+            if (!lastYshown && !getShowMenu())
+                continue;
+        } else {
+            lastY = yy;            
+            uint16_t crc = calcCrc(data[yy]);
+            if (crc == rowCrc[yy] && !getShowMenu()) {
+                lastYshown = false;
+                continue;
+            } else {
+                lastYshown = true;
+                rowCrc[yy] = crc;
+            }
+        }
+
         //start line
         x1 = xs + (width - 1);
         y1 = ys + y + (height - 1);
@@ -651,55 +698,38 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
         GPIO.out_w1tc = dc;
         spiWrite(7, 0x2c);
 
-        if (getBright() == -1)
-            LCD_BKG_OFF();
-
         x = 0;
         GPIO.out_w1ts = dc;
         SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, 511, SPI_USR_MOSI_DBITLEN_S);
         while (x < width)
         {
+            // Render 32 pixels, grouped as pairs of 16-bit pixels stored in 32-bit values
             for (i = 0; i < 16; i++)
             {
-                if (data == NULL)
-                {
-                    temp[i] = 0;
-                    x += 2;
-                    continue;
-                }
-                int newX = x;
-                int newy = y;
-                //temp[i]==0x0F;
-                if (xStr)
-                    newX = newX * 0.8;
-                if (yStr)
-                    newy = newy * 0.94;
-                if (newX >= 32 && !xStr)
-                    newX = newX - 32;
-                x1 = myPalette[(unsigned char)(data[newy][newX])];
+                xx = xStr ? scaleX[x] : x;
+                if (xx >= 32 && !xStr)
+                    xx -= 32;
+                evenPixel = myPalette[(unsigned char)(data[yy][xx])];
                 x++;
-                newX++;
-                //if(xStr)newX=newX*0.8;
-                //if(yStr)newy=newy*0.94;
-                y1 = myPalette[(unsigned char)(data[newy][newX])];
+                xx = xStr ? scaleX[x] : x;
+                if (xx >= 32 && !xStr)
+                    xx -= 32;
+                oddPixel = myPalette[(unsigned char)(data[yy][xx])];
                 x++;
-                newX++;
                 if (!xStr && (x <= 32 || x >= 288))
-                    x1 = y1 = 0x00;
-                //"ambilight"
-                /*if(!xStr && x<=32)x1 = myPalette[(unsigned char)(data[newy][0])];
-				if(!xStr && x<=32)y1 = myPalette[(unsigned char)(data[newy][0])];
-				if(!xStr && x>=288)x1 = myPalette[(unsigned char)(data[newy][250])];
-				if(!xStr && x>=288)y1 = myPalette[(unsigned char)(data[newy][250])];*/
+                    evenPixel = oddPixel = 0x00;
                 if (!yStr && y >= 224)
-                    x1 = y1 = 0x00;
+                    evenPixel = oddPixel = 0x00;
+                //"ambilight"
+                /*if(!xStr && x<=32)evenPixel = myPalette[(unsigned char)(data[newy][0])];
+				if(!xStr && x<=32)oddPixel = myPalette[(unsigned char)(data[newy][0])];
+				if(!xStr && x>=288)evenPixel = myPalette[(unsigned char)(data[newy][250])];
+				if(!xStr && x>=288)oddPixel = myPalette[(unsigned char)(data[newy][250])];*/
                 if (getShowMenu())
                 {
-                    x1 = y1 = renderInGameMenu(x, y, x1, y1, xStr, yStr);
+                    evenPixel = oddPixel = renderInGameMenu(x, y, evenPixel, oddPixel, xStr, yStr);
                 }
-                temp[i] = U16x2toU32(x1, y1);
-                if (getShutdown())
-                    setBrightness(getBright());
+                temp[i] = U16x2toU32(evenPixel, oddPixel);
             }
             waitForSPIReady();
             for (i = 0; i < 16; i++)
@@ -709,8 +739,21 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
             SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
         }
     }
+
+    if (getShutdown())
+        setBrightness(getBright());
+    if (getBright() == -1)
+        LCD_BKG_OFF();
 }
 
+void precalculateLookupTables() {
+    for (int i=0; i < 320; i++) {
+        scaleX[i] = i * 0.8;
+    }
+    for (int i=0; i < 240; i++) {
+        scaleY[i] = i * 0.94;
+    }
+}
 void ili9341_init()
 {
     lineEnd = textEnd = 0;
@@ -719,4 +762,6 @@ void ili9341_init()
     ILI9341_INITIAL();
     //LCD_BKG_ON();
     //initBCKL();
+    memset(rowCrc, 0x1234, sizeof rowCrc);
+    precalculateLookupTables();
 }

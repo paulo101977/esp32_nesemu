@@ -30,6 +30,8 @@
 #include "nes6502.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "soc/timer_group_struct.h"
+#include "soc/timer_group_reg.h"
 #include <log.h>
 #include <osd.h>
 #include <gui.h>
@@ -41,16 +43,15 @@
 #include <vid_drv.h>
 #include <nofrendo.h>
 
-
-#define  NES_CLOCK_DIVIDER    12
+#define NES_CLOCK_DIVIDER 12
 //#define  NES_MASTER_CLOCK     21477272.727272727272
-#define  NES_MASTER_CLOCK     (236250000 / 11)
-#define  NES_SCANLINE_CYCLES  (1364.0 / NES_CLOCK_DIVIDER)
-#define  NES_FIQ_PERIOD       (NES_MASTER_CLOCK / NES_CLOCK_DIVIDER / 60)
+#define NES_MASTER_CLOCK (236250000 / 11)
+#define NES_SCANLINE_CYCLES (1364.0 / NES_CLOCK_DIVIDER)
+#define NES_FIQ_PERIOD (NES_MASTER_CLOCK / NES_CLOCK_DIVIDER / 60)
 
-#define  NES_RAMSIZE          0x800
+#define NES_RAMSIZE 0x800
 
-#define  NES_SKIP_LIMIT       (NES_REFRESH_RATE / 5)   /* 12 or 10, depending on PAL/NTSC */
+#define NES_SKIP_LIMIT (NES_REFRESH_RATE / 5) /* 12 or 10, depending on PAL/NTSC */
 
 static nes_t nes;
 
@@ -102,14 +103,15 @@ static int ram_write(uint32 address, uint8 value)
 static int trigger_sram_save(uint32 address, uint8 value)
 {
    uint8 originalValue = ram_read(address);
-   if (originalValue != value) {
+   if (originalValue != value)
+   {
       // Only trigger SRAM save if something really chaged
       nes.saveSramCountdown = 5;
    }
    return 1;
 }
 
-static int write_protect(uint32 address, uint8 value)
+ static int write_protect(uint32 address, uint8 value)
 {
    /* don't allow write to go through */
    UNUSED(address);
@@ -125,33 +127,34 @@ static uint8 read_protect(uint32 address)
    return 0xFF;
 }
 
-#define  LAST_MEMORY_HANDLER  { -1, -1, NULL }
+#define LAST_MEMORY_HANDLER \
+   {                        \
+      -1, -1, NULL          \
+   }
 /* read/write handlers for standard NES */
 static nes6502_memread default_readhandler[] =
-{
-   { 0x0800, 0x1FFF, ram_read },
-   { 0x2000, 0x3FFF, ppu_read },
-   { 0x4000, 0x4015, apu_read },
-   { 0x4016, 0x4017, ppu_readhigh },
-   LAST_MEMORY_HANDLER
-};
+    {
+        {0x0800, 0x1FFF, ram_read},
+        {0x2000, 0x3FFF, ppu_read},
+        {0x4000, 0x4015, apu_read},
+        {0x4016, 0x4017, ppu_readhigh},
+        LAST_MEMORY_HANDLER};
 
 static nes6502_memwrite default_writehandler[] =
-{
-   { 0x0800, 0x1FFF, ram_write },
-   { 0x2000, 0x3FFF, ppu_write },
-   { 0x4000, 0x4013, apu_write },
-   { 0x4015, 0x4015, apu_write },
-   { 0x4014, 0x4017, ppu_writehigh },
-   LAST_MEMORY_HANDLER
-};
+    {
+        {0x0800, 0x1FFF, ram_write},
+        {0x2000, 0x3FFF, ppu_write},
+        {0x4000, 0x4013, apu_write},
+        {0x4015, 0x4015, apu_write},
+        {0x4014, 0x4017, ppu_writehigh},
+        LAST_MEMORY_HANDLER};
 
 /* this big nasty boy sets up the address handlers that the CPU uses */
 static void build_address_handlers(nes_t *machine)
 {
    int count, num_handlers = 0;
    mapintf_t *intf;
-   
+
    ASSERT(machine);
    intf = machine->mmc->intf;
 
@@ -253,7 +256,8 @@ static void build_address_handlers(nes_t *machine)
    machine->writehandler[num_handlers].max_range = 0xFFFF;
    machine->writehandler[num_handlers].write_func = write_protect;
    num_handlers++;
-   if (machine->rominfo->sram) {
+   if (machine->rominfo->sram)
+   {
       // If there is SRAM present, catch writes the sav file can be updated
       machine->writehandler[num_handlers].min_range = 0x6000;
       machine->writehandler[num_handlers].max_range = 0x7fff;
@@ -292,7 +296,7 @@ static uint8 nes_clearfiq(void)
 void nes_setfiq(uint8 value)
 {
    nes.fiq_state = value;
-   nes.fiq_cycles = (int) NES_FIQ_PERIOD;
+   nes.fiq_cycles = (int)NES_FIQ_PERIOD;
 }
 
 static void nes_checkfiq(int cycles)
@@ -300,7 +304,7 @@ static void nes_checkfiq(int cycles)
    nes.fiq_cycles -= cycles;
    if (nes.fiq_cycles <= 0)
    {
-      nes.fiq_cycles += (int) NES_FIQ_PERIOD;
+      nes.fiq_cycles += (int)NES_FIQ_PERIOD;
       if (0 == (nes.fiq_state & 0xC0))
       {
          nes.fiq_occurred = true;
@@ -316,7 +320,8 @@ void nes_nmi(void)
 
 static TaskHandle_t xSramSaveHandle;
 #define DELAY_BEFORE_SAVING 200
-static void save_sram() {
+static void save_sram()
+{
    TaskHandle_t taskId = xSramSaveHandle;
    vTaskDelay(DELAY_BEFORE_SAVING);
    rom_savesram(nes.rominfo);
@@ -333,8 +338,8 @@ static void nes_renderframe(bool draw_flag)
 
    while (262 != nes.scanline)
    {
-//      ppu_scanline(nes.vidbuf, nes.scanline, draw_flag);
-		ppu_scanline(vid_getbuffer(), nes.scanline, draw_flag);
+      //      ppu_scanline(nes.vidbuf, nes.scanline, draw_flag);
+      ppu_scanline(vid_getbuffer(), nes.scanline, draw_flag);
 
       if (241 == nes.scanline)
       {
@@ -348,33 +353,18 @@ static void nes_renderframe(bool draw_flag)
          if (mapintf->vblank)
             mapintf->vblank();
          in_vblank = 1;
-      } 
+      }
 
       if (mapintf->hblank)
          mapintf->hblank(in_vblank);
 
-      nes.scanline_cycles += (float) NES_SCANLINE_CYCLES;
-      elapsed_cycles = nes6502_execute((int) nes.scanline_cycles);
-      nes.scanline_cycles -= (float) elapsed_cycles;
+      nes.scanline_cycles += (float)NES_SCANLINE_CYCLES;
+      elapsed_cycles = nes6502_execute((int)nes.scanline_cycles);
+      nes.scanline_cycles -= (float)elapsed_cycles;
       nes_checkfiq(elapsed_cycles);
 
       ppu_endscanline(nes.scanline);
       nes.scanline++;
-   }
-
-   if (nes.saveSramCountdown > 0) {
-      nes.saveSramCountdown = nes.saveSramCountdown - 1;
-      if (nes.saveSramCountdown == 0 && xSramSaveHandle == NULL) {
-         log_printf("Trigger SRAM Save\n");
-         xTaskCreatePinnedToCore(
-                    save_sram,         /* Function to implement the task */
-                    "saveSRAM",        /* Name of the task */
-                    10000,             /* Stack size in words */
-                    NULL,              /* Task input parameter */
-                    0,                 /* Priority of the task */
-                    &xSramSaveHandle,  /* Task handle. */
-                    1);                /* Core where the task should run */
-      }
    }
    nes.scanline = 0;
 }
@@ -389,8 +379,8 @@ static void system_video(bool draw)
    }
 
    /* blit the NES screen to our video surface */
-//   vid_blit(nes.vidbuf, 0, (NES_SCREEN_HEIGHT - NES_VISIBLE_HEIGHT) / 2,
-//            0, 0, NES_SCREEN_WIDTH, NES_VISIBLE_HEIGHT);
+   //   vid_blit(nes.vidbuf, 0, (NES_SCREEN_HEIGHT - NES_VISIBLE_HEIGHT) / 2,
+   //            0, 0, NES_SCREEN_WIDTH, NES_VISIBLE_HEIGHT);
 
    /* overlay our GUI on top of it */
    gui_frame(true);
@@ -406,14 +396,14 @@ static void system_video(bool draw)
 void nes_emulate(void)
 {
    int last_ticks, frames_to_render;
-   int framesBeforeYield=0;
+   int framesBeforeYield = 0;
 
    osd_setsound(nes.apu->process);
 
    last_ticks = nofrendo_ticks;
    frames_to_render = 0;
    nes.scanline_cycles = 0;
-   nes.fiq_cycles = (int) NES_FIQ_PERIOD;
+   nes.fiq_cycles = (int)NES_FIQ_PERIOD;
 
    while (false == nes.poweroff)
    {
@@ -438,18 +428,40 @@ void nes_emulate(void)
          nes_renderframe(false);
          system_video(false);
       }
-      else if ((1 == frames_to_render && true == nes.autoframeskip)
-               || false == nes.autoframeskip)
+      else if ((1 == frames_to_render && true == nes.autoframeskip) || false == nes.autoframeskip)
       {
          frames_to_render = 0;
          nes_renderframe(true);
          system_video(true);
-         if (framesBeforeYield <= 0) 
+         if (framesBeforeYield <= 0)
          {
             vTaskDelay(1);
             framesBeforeYield = 200;
-         } else {
+         }
+         else
+         {
             framesBeforeYield--;
+         }
+      }
+      // Reset watchdog timer
+      TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
+      TIMERG0.wdt_feed=1;
+      TIMERG0.wdt_wprotect=0;
+
+      if (nes.saveSramCountdown > 0)
+      {
+         nes.saveSramCountdown = nes.saveSramCountdown - 1;
+         if (nes.saveSramCountdown == 0 && xSramSaveHandle == NULL)
+         {
+            log_printf("Trigger SRAM Save\n");
+            xTaskCreatePinnedToCore(
+                save_sram,        /* Function to implement the task */
+                "saveSRAM",       /* Name of the task */
+                10000,            /* Stack size in words */
+                NULL,             /* Task input parameter */
+                0,                /* Priority of the task */
+                &xSramSaveHandle, /* Task handle. */
+                1);               /* Core where the task should run */
          }
       }
    }
@@ -460,7 +472,7 @@ static void mem_trash(uint8 *buffer, int length)
    int i;
 
    for (i = 0; i < length; i++)
-      buffer[i] = (uint8) rand();
+      buffer[i] = (uint8)rand();
 }
 
 /* Reset NES hardware */
@@ -492,7 +504,7 @@ void nes_destroy(nes_t **machine)
       mmc_destroy(&(*machine)->mmc);
       ppu_destroy(&(*machine)->ppu);
       apu_destroy(&(*machine)->apu);
-//      bmp_destroy(&(*machine)->vidbuf);
+      //      bmp_destroy(&(*machine)->vidbuf);
       if ((*machine)->cpu)
       {
          if ((*machine)->cpu->mem_page[0])
@@ -539,13 +551,14 @@ int nes_insertcart(const char *filename, nes_t *machine)
       goto _fail;
 
    /* if there's VRAM, let the PPU know */
-   if (NULL != machine->rominfo->vram) {
+   if (NULL != machine->rominfo->vram)
+   {
       printf("VRAM Present\n");
       machine->ppu->vram_present = true;
    }
-   
+
    apu_setext(machine->apu, machine->mmc->intf->sound_ext);
-   
+
    build_address_handlers(machine);
 
    nes_setcontext(machine);
@@ -557,7 +570,6 @@ _fail:
    nes_destroy(&machine);
    return -1;
 }
-
 
 /* Initialize NES CPU, hardware, etc. */
 nes_t *nes_create(void)
@@ -574,9 +586,9 @@ nes_t *nes_create(void)
 
    /* bitmap */
    /* 8 pixel overdraw */
-//   machine->vidbuf = bmp_create(NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, 8);
-//   if (NULL == machine->vidbuf)
-//      goto _fail;
+   //   machine->vidbuf = bmp_create(NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, 8);
+   //   if (NULL == machine->vidbuf)
+   //      goto _fail;
 
    machine->autoframeskip = true;
 
@@ -586,7 +598,7 @@ nes_t *nes_create(void)
       goto _fail;
 
    memset(machine->cpu, 0, sizeof(nes6502_context));
-   
+
    /* allocate 2kB RAM */
    machine->cpu->mem_page[0] = malloc(NES_RAMSIZE);
    if (NULL == machine->cpu->mem_page[0])

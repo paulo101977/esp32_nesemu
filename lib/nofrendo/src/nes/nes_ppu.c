@@ -459,7 +459,6 @@ int ppu_write(uint32 address, uint8 value)
       }
 
       ppu.flipflop ^= 1;
-
       break;
 
    case PPU_VADDR:
@@ -487,8 +486,8 @@ int ppu_write(uint32 address, uint8 value)
          /* VRAM only accessible during scanlines 241-260 */
          if ((ppu.bg_on || ppu.obj_on) && !ppu.vram_accessible)
          {
-            log_printf("VRAM write to $%04X, scanline %d\n", 
-                       ppu.vaddr, nes_getcontextptr()->scanline);
+            // log_printf("VRAM write to $%04X, scanline %d\n", 
+            //            ppu.vaddr, nes_getcontextptr()->scanline);
             PPU_MEM(ppu.vaddr) = 0xFF; /* corrupt */
          }
          else 
