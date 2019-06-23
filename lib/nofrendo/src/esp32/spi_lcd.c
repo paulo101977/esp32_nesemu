@@ -60,7 +60,9 @@
 #define LCD_TYPE_ILI 0
 #define LCD_TYPE_ST 1
 
-#define waitForSPIReady() while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM)) & SPI_USR) ;
+#define waitForSPIReady()                                 \
+    while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM)) & SPI_USR) \
+        ;
 
 ledc_channel_config_t ledc_channel;
 
@@ -370,6 +372,7 @@ static void ILI9341_INITIAL()
 
 static void ili_gpio_init()
 {
+    // TODO: Resolve hard-coded constants
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO21_U, 2); //DC PIN
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO18_U, 2); //RESET PIN
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, 2);  //BKL PIN
@@ -382,6 +385,7 @@ static void spi_master_init()
     periph_module_enable(PERIPH_SPI_DMA_MODULE);
 
     ets_printf("lcd spi pin mux init ...\r\n");
+    // TODO: Resolve hard-coded constants
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO19_U, 2);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO23_U, 2);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO22_U, 2);
@@ -429,15 +433,15 @@ static void spi_master_init()
 extern uint16_t myPalette[];
 
 char *menuText[10] = {
-    "Brightness 46 0.", 
-    "Volume     82 9.", 
-    " .", 
-    "Turbo  3 $  1 @.", 
-    " .", 
+    "Brightness 46 0.",
+    "Volume     82 9.",
+    " .",
+    "Turbo  3 $  1 @.",
+    " .",
     "These cause lag.",
-    "Horiz Scale 1 5.", 
-    "Vert Scale  3 7.", 
-    " .", 
+    "Horiz Scale 1 5.",
+    "Vert Scale  3 7.",
+    " .",
     "*"};
 bool arrow[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
                     {0, 0, 0, 0, 1, 0, 0, 0, 0},
@@ -448,24 +452,24 @@ bool arrow[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
                     {0, 0, 0, 1, 1, 1, 0, 0, 0},
                     {0, 0, 0, 1, 1, 1, 0, 0, 0},
                     {0, 0, 0, 0, 0, 0, 0, 0, 0}};
-bool buttonA[9][9] = {{0, 0, 1, 1, 1, 1, 0, 0, 0},
+bool buttonA[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
+                      {0, 0, 1, 1, 1, 1, 0, 0, 0},
                       {0, 1, 1, 0, 0, 1, 1, 0, 0},
                       {1, 1, 0, 1, 1, 0, 1, 1, 0},
                       {1, 1, 0, 1, 1, 0, 1, 1, 0},
                       {1, 1, 0, 0, 0, 0, 1, 1, 0},
                       {1, 1, 0, 1, 1, 0, 1, 1, 0},
                       {0, 1, 0, 1, 1, 0, 1, 0, 0},
+                      {0, 0, 1, 1, 1, 1, 0, 0, 0}};
+bool buttonB[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
                       {0, 0, 1, 1, 1, 1, 0, 0, 0},
-                      {0, 0, 0, 0, 0, 0, 0, 0, 0}};
-bool buttonB[9][9] = {{0, 0, 1, 1, 1, 1, 0, 0, 0},
                       {0, 1, 0, 0, 0, 1, 1, 0, 0},
                       {1, 1, 0, 1, 1, 0, 1, 1, 0},
                       {1, 1, 0, 0, 0, 1, 1, 1, 0},
                       {1, 1, 0, 1, 1, 0, 1, 1, 0},
                       {1, 1, 0, 1, 1, 0, 1, 1, 0},
                       {0, 1, 0, 0, 0, 1, 1, 0, 0},
-                      {0, 0, 1, 1, 1, 1, 0, 0, 0},
-                      {0, 0, 0, 0, 0, 0, 0, 0, 0}};
+                      {0, 0, 1, 1, 1, 1, 0, 0, 0}};
 bool disabled[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
                        {0, 0, 1, 1, 1, 1, 0, 0, 0},
                        {0, 1, 0, 0, 0, 0, 1, 0, 0},
@@ -493,8 +497,125 @@ bool scale[9][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
                     {0, 0, 1, 1, 1, 1, 1, 1, 0},
                     {1, 1, 1, 1, 1, 1, 1, 1, 0},
                     {1, 1, 1, 1, 1, 1, 1, 1, 0}};
-bool lineEnd;
-bool textEnd;
+static bool lineEnd;
+static bool textEnd;
+#define BRIGHTNESS '0'
+#define A_BUTTON '1'
+#define DOWN_ARROW '2'
+#define B_BUTTON '3'
+#define LEFT_ARROW '4'
+#define HORIZ_SCALE '5'
+#define RIGHT_ARROW '6'
+#define VERT_SCALE '7'
+#define UP_ARROW '8'
+#define VOL_METER '9'
+#define TURBO_A '@'
+#define TURBO_B '$'
+#define EOL_MARKER '.'
+#define EOF_MARKER '*'
+
+#define spiWrite(register, val)                                                                            \
+    SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, register, SPI_USR_MOSI_DBITLEN_S); \
+    WRITE_PERI_REG((SPI_W0_REG(SPI_NUM)), val);                                                            \
+    SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);                                                      \
+    waitForSPIReady();
+
+static uint16_t renderInGameMenu(int x, int y, uint16_t x1, uint16_t y1, bool xStr, bool yStr)
+{
+    if (x < 32 || x > 286 || y < 34 || y > 206)
+        return x1;
+    else if (x < 40 || x > 280 || y < 38 || y > 202)
+        return 0x0F;
+    char actChar = ' ';
+    if (y == 38)
+        textEnd = 0;
+    if (x == 40)
+        lineEnd = 0;
+    int line = (y - 38) / 18;
+    int charNo = (x - 40) / 16;
+    int xx = ((x - 40) % 16) / 2;
+    int yy = ((y - 38) % 18) / 2;
+
+    actChar = menuText[line][charNo];
+    if (actChar == EOL_MARKER)
+        lineEnd = 1;
+    if (actChar == EOF_MARKER)
+        textEnd = 1;
+    if (lineEnd || textEnd)
+        return 0x0F;
+    //printf("char %c, x = %d, y = %d{\n",actChar,x,y);
+    //color c = [b](0to31)*1 + [g](0to31)*31 + [r] (0to31)*1024 +0x8000 --> x1=y1=c; !?
+    switch (actChar)
+    {
+    case DOWN_ARROW:
+        if (arrow[8 - yy][xx])
+            return 0xDDDD;
+        break;
+    case LEFT_ARROW:
+        if (arrow[xx][yy])
+            return 0xDDDD;
+        break;
+    case RIGHT_ARROW:
+        if (arrow[8 - xx][yy])
+            return 0xDDDD;
+        break;
+    case UP_ARROW:
+        if (arrow[yy][xx])
+            return 0xDDDD;
+        break;
+    case A_BUTTON:
+        if (buttonA[yy][xx])
+            return 0xDDDD;
+        break;
+    case B_BUTTON:
+        if (buttonB[yy][xx])
+            return 0xDDDD;
+        break;
+    case HORIZ_SCALE:
+        if (xStr && enabled[yy][xx])
+            return 63 << 5;
+        else if (!xStr && disabled[yy][xx])
+            return 31 << 11;
+        break;
+    case VERT_SCALE:
+        if (yStr && enabled[yy][xx])
+            return 63 << 5;
+        else if (!yStr && disabled[yy][xx])
+            return 31 << 11;
+        break;
+    case BRIGHTNESS:
+        if (scale[yy][xx])
+        {
+            return xx < getBright() * 2 ? 0xFFFF : 0xDDDD;
+            setBrightness(getBright());
+        }
+        break;
+    case VOL_METER:
+        if (getVolume() == 0 && disabled[yy][xx])
+            return 31 << 11;
+
+        if (getVolume() > 0 && scale[yy][xx])
+            return (xx) < getVolume() * 2 ? 0xFFFF : 0xDDDD;
+        break;
+    case TURBO_A:
+        if (!getTurboA() && disabled[yy][xx])
+            return 31 << 11;
+        if (getTurboA() > 0 && scale[yy][xx])
+            return (xx) < (getTurboA() * 2 - 1) ? 0xffff : 0xdddd;
+        break;
+    case TURBO_B:
+        if (!getTurboB() && disabled[yy][xx])
+            return 31 << 11;
+        if (getTurboB() > 0 && scale[yy][xx])
+            return (xx) < (getTurboB() * 2 - 1) ? 0xffff : 0xdddd;
+        break;
+    default:
+        if ((actChar < 47 || actChar > 57) && peGetPixel(actChar, (x - 40) % 16, (y - 38) % 18))
+            return 0xFFFF;
+        break;
+    }
+    return 0x0F;
+}
 
 void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t width, const uint16_t height, const uint8_t *data[],
                          bool xStr, bool yStr)
@@ -516,31 +637,19 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
         yv = U16x2toU32((ys + y), y1);
 
         waitForSPIReady();
+        // Set column (command 0x2a - col address) to X start
         GPIO.out_w1tc = dc;
-        SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, 7, SPI_USR_MOSI_DBITLEN_S);
-        WRITE_PERI_REG((SPI_W0_REG(SPI_NUM)), 0x2A);
-        SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
-        waitForSPIReady();
+        spiWrite(7, 0x2a);
         GPIO.out_w1ts = dc;
-        SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, 31, SPI_USR_MOSI_DBITLEN_S);
-        WRITE_PERI_REG((SPI_W0_REG(SPI_NUM)), xv);
-        SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
-        waitForSPIReady();
+        spiWrite(31, xv);
+        // Set row (command 0x2B - page address) to Y start
         GPIO.out_w1tc = dc;
-        SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, 7, SPI_USR_MOSI_DBITLEN_S);
-        WRITE_PERI_REG((SPI_W0_REG(SPI_NUM)), 0x2B);
-        SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
-        waitForSPIReady();
+        spiWrite(7, 0x2b);
         GPIO.out_w1ts = dc;
-        SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, 31, SPI_USR_MOSI_DBITLEN_S);
-        WRITE_PERI_REG((SPI_W0_REG(SPI_NUM)), yv);
-        SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
-        waitForSPIReady();
+        spiWrite(31, yv);
+        // Send memory write command
         GPIO.out_w1tc = dc;
-        SET_PERI_REG_BITS(SPI_MOSI_DLEN_REG(SPI_NUM), SPI_USR_MOSI_DBITLEN, 7, SPI_USR_MOSI_DBITLEN_S);
-        WRITE_PERI_REG((SPI_W0_REG(SPI_NUM)), 0x2C);
-        SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
-        waitForSPIReady();
+        spiWrite(7, 0x2c);
 
         if (getBright() == -1)
             LCD_BKG_OFF();
@@ -586,138 +695,7 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
                     x1 = y1 = 0x00;
                 if (getShowMenu())
                 {
-                    char actChar = ' ';
-                    if (y == 38)
-                        textEnd = 0;
-                    if (x == 40)
-                        lineEnd = 0;
-                    int line = (y - 38) / 18;
-                    int charNo = (x - 40) / 16;
-                    if (x < 32 || x > 286 || y < 34 || y > 206)
-                        ;
-                    else if (x < 40 || x > 280 || y < 38 || y > 202)
-                        x1 = y1 = 0x0F;
-                    else
-                    {
-                        if (!lineEnd && !textEnd)
-                        {
-                            x1 = y1 = 0x00;
-                            actChar = menuText[line][charNo];
-                            //printf("char %c, x = %d, y = %d{\n",actChar,x,y);
-                            //color c = [b](0to31)*1 + [g](0to31)*31 + [r] (0to31)*1024 +0x8000 --> x1=y1=c; !?
-                            if (actChar == '2' && arrow[8 - ((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                x1 = y1 = 0xDDDD;
-                            else if (actChar == '4' && arrow[((x - 40) % 16) / 2][((y - 38) % 18) / 2])
-                                x1 = y1 = 0xDDDD;
-                            else if (actChar == '6' && arrow[8 - ((x - 40) % 16) / 2][8 - ((y - 38) % 18) / 2])
-                                x1 = y1 = 0xDDDD;
-                            else if (actChar == '8' && arrow[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                x1 = y1 = 0xDDDD;
-                            else if (actChar == '1' && buttonA[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                x1 = y1 = 0xDDDD;
-                            else if (actChar == '3' && buttonB[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                x1 = y1 = 0xDDDD;
-                            else if (actChar == '5')
-                            {
-                                if (xStr && enabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 31 + 0x8000;
-                                else if (!xStr && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 1024 + 0x8000;
-                                else
-                                    x1 = y1 = 0x0F;
-                                ;
-                            }
-                            else if (actChar == '7')
-                            {
-                                if (yStr && enabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 31 + 0x8000;
-                                else if (!yStr && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 1024 + 0x8000;
-                                else
-                                    x1 = y1 = 0x0F;
-                            }
-                            else if (actChar == '0')
-                            {
-                                if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < getBright() * 2)
-                                    x1 = y1 = 0xFFFF;
-                                else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= getBright() * 2)
-                                    x1 = y1 = 0xDDDD;
-                                else
-                                    x1 = y1 = 0x0F;
-                                setBrightness(getBright());
-                            }
-                            else if (actChar == '9')
-                            {
-                                if (getVolume() == 0 && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 1024 + 0x8000;
-                                else
-                                    x1 = y1 = 0x0F;
-                                ;
-
-                                if (getVolume() > 0)
-                                {
-                                    if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < getVolume() * 2)
-                                        x1 = y1 = 0xFFFF;
-                                    else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= getVolume() * 2)
-                                        x1 = y1 = 0xDDDD;
-                                    else
-                                        x1 = y1 = 0x0F;
-                                }
-                            }
-                            else if (actChar == '@')
-                            {
-                                if (getTurboA() == 0 && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 1024 + 0x8000;
-                                else
-                                    x1 = y1 = 0x0F;
-                                ;
-
-                                if (getTurboA() > 0)
-                                {
-                                    if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < (getTurboA() * 2 -1))
-                                        x1 = y1 = 0xFFFF;
-                                    else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= (getTurboA() * 2 -1))
-                                        x1 = y1 = 0xDDDD;
-                                    else
-                                        x1 = y1 = 0x0F;
-                                }
-                            }
-                            else if (actChar == '$')
-                            {
-                                if (getTurboB() == 0 && disabled[((y - 38) % 18) / 2][((x - 40) % 16) / 2])
-                                    x1 = y1 = 31 * 1024 + 0x8000;
-                                else
-                                    x1 = y1 = 0x0F;
-                                ;
-
-                                if (getTurboB() > 0)
-                                {
-                                    if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) < (getTurboB() * 2 -1))
-                                        x1 = y1 = 0xFFFF;
-                                    else if (scale[((y - 38) % 18) / 2][((x - 40) % 16) / 2] && (((x - 40) % 16) / 2) >= (getTurboB() * 2 -1))
-                                        x1 = y1 = 0xDDDD;
-                                    else
-                                        x1 = y1 = 0x0F;
-                                }
-                            }
-                            else if ((actChar < 47 || actChar > 57) && peGetPixel(actChar, (x - 40) % 16, (y - 38) % 18))
-                                x1 = y1 = 0xFFFF; //0x55;
-                            else
-                                x1 = y1 = 0x0F;
-                            if (actChar == '.')
-                            {
-                                lineEnd = 1;
-                                x1 = y1 = 0x0F;
-                            }
-                            if (actChar == '*')
-                            {
-                                textEnd = 1;
-                                x1 = y1 = 0x0F;
-                            }
-                        }
-                        else
-                            x1 = y1 = 0x0F;
-                    }
+                    x1 = y1 = renderInGameMenu(x, y, x1, y1, xStr, yStr);
                 }
                 temp[i] = U16x2toU32(x1, y1);
                 if (getShutdown())
