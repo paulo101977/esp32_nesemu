@@ -101,7 +101,7 @@ static int ram_write(uint32 address, uint8 value)
 
 static int trigger_sram_save(uint32 address, uint8 value)
 {
-   nes.saveSramCountdown = 2;
+   nes.saveSramCountdown = 5;
    return 1;
 }
 
@@ -250,7 +250,7 @@ static void build_address_handlers(nes_t *machine)
    machine->writehandler[num_handlers].write_func = write_protect;
    num_handlers++;
    if (machine->rominfo->sram) {
-      // TODO: If there is SRAM present, catch writes the sav file can be updated
+      // If there is SRAM present, catch writes the sav file can be updated
       machine->writehandler[num_handlers].min_range = 0x6000;
       machine->writehandler[num_handlers].max_range = 0x7fff;
       machine->writehandler[num_handlers].write_func = trigger_sram_save;
@@ -310,6 +310,17 @@ void nes_nmi(void)
    nes6502_nmi();
 }
 
+static TaskHandle_t xSramSaveHandle;
+#define DELAY_BEFORE_SAVING 200
+static void save_sram() {
+   TaskHandle_t taskId = xSramSaveHandle;
+   vTaskDelay(DELAY_BEFORE_SAVING);
+   rom_savesram(nes.rominfo);
+   xSramSaveHandle = NULL;
+   vTaskDelete(taskId);
+   vTaskSuspend(taskId);
+}
+
 static void nes_renderframe(bool draw_flag)
 {
    int elapsed_cycles;
@@ -349,10 +360,16 @@ static void nes_renderframe(bool draw_flag)
 
    if (nes.saveSramCountdown > 0) {
       nes.saveSramCountdown = nes.saveSramCountdown - 1;
-      if (nes.saveSramCountdown == 0) {
-         printf("Saving SRAM...\n");
-         rom_savesram(nes.rominfo);
-         printf("SRAM saved!\n");
+      if (nes.saveSramCountdown == 0 && xSramSaveHandle == NULL) {
+         printf("Trigger SRAM Save\n");
+         xTaskCreatePinnedToCore(
+                    save_sram,         /* Function to implement the task */
+                    "saveSRAM",        /* Name of the task */
+                    10000,             /* Stack size in words */
+                    NULL,              /* Task input parameter */
+                    0,                 /* Priority of the task */
+                    &xSramSaveHandle,  /* Task handle. */
+                    1);                /* Core where the task should run */
       }
    }
    nes.scanline = 0;

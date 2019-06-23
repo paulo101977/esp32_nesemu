@@ -89,7 +89,7 @@ typedef struct nes_s
    bool poweroff;
    bool pause;
 
-   /* SRAM trap */
+   /* SRAM counter, setting above 0 triggers save after N frames */
    int saveSramCountdown;
 
 } nes_t;
