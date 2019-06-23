@@ -91,7 +91,7 @@ void rom_savesram(rominfo_t *rominfo)
 
    if (rominfo->flags & ROM_FLAG_BATTERY)
    {
-      printf("Preparing to save sram file for rom %s\n", rominfo->filename);
+      log_printf("Preparing to save sram file for rom %s\n", rominfo->filename);
       strncpy(fn, rominfo->filename, PATH_MAX);
       osd_newextension(fn, ".sav");
 
@@ -115,7 +115,7 @@ static void rom_loadsram(rominfo_t *rominfo)
 
    if (rominfo->flags & ROM_FLAG_BATTERY)
    {
-      printf("Preparing to load sram file for rom %s\n", rominfo->filename);
+      log_printf("Preparing to load sram file for rom %s\n", rominfo->filename);
       strncpy(fn, rominfo->filename, PATH_MAX);
       osd_newextension(fn, ".sav");
 
@@ -419,7 +419,7 @@ char *rom_getinfo(rominfo_t *rominfo)
       strcpy(info, romname);
    }
 
-   sprintf(temp, " [%d] %dk/%dk %c", rominfo->mapper_number,
+   log_printf(temp, " [%d] %dk/%dk %c", rominfo->mapper_number,
            rominfo->rom_banks * 16, rominfo->vrom_banks * 8,
            (rominfo->mirror == MIRROR_VERT) ? 'V' : 'H');
    

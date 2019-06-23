@@ -101,7 +101,11 @@ static int ram_write(uint32 address, uint8 value)
 
 static int trigger_sram_save(uint32 address, uint8 value)
 {
-   nes.saveSramCountdown = 5;
+   uint8 originalValue = ram_read(address);
+   if (originalValue != value) {
+      // Only trigger SRAM save if something really chaged
+      nes.saveSramCountdown = 5;
+   }
    return 1;
 }
 
@@ -361,7 +365,7 @@ static void nes_renderframe(bool draw_flag)
    if (nes.saveSramCountdown > 0) {
       nes.saveSramCountdown = nes.saveSramCountdown - 1;
       if (nes.saveSramCountdown == 0 && xSramSaveHandle == NULL) {
-         printf("Trigger SRAM Save\n");
+         log_printf("Trigger SRAM Save\n");
          xTaskCreatePinnedToCore(
                     save_sram,         /* Function to implement the task */
                     "saveSRAM",        /* Name of the task */
