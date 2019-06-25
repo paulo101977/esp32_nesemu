@@ -77,8 +77,9 @@ static void do_audio_frame()
 {
 
 #if CONFIG_SOUND_ENABLED
-	if (!audio_callback)
+	if (!audio_callback || getVolume() <= 0)
 	{
+		i2s_zero_dma_buffer(I2S_DEVICE_ID);
 		return;
 	}
 	uint16_t *bufU = (uint16_t *)audio_buffer;
@@ -93,7 +94,7 @@ static void do_audio_frame()
 		for (int i=0; i < n; i++) {
 			int16_t sample = bufS[i];
 			uint16_t unsignedSample = sample ^ 0x8000;
-			bufU[i] = unsignedSample;
+			bufU[i] = unsignedSample >> volShift;
 		}
 		size_t written = -1;
 		i2s_write(I2S_DEVICE_ID, audio_buffer, BYTES_PER_SAMPLE * n, &written, portMAX_DELAY);

@@ -414,7 +414,7 @@ void psxcontrollerInit()
 	}
 #endif
 	inpDelay = 0;
-	volume = 0;
+	volume = 4;
 	bright = 2;
 }
 
