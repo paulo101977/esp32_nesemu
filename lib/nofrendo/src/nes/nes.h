@@ -45,7 +45,7 @@
 #ifdef PAL
 #define  NES_REFRESH_RATE     50
 #else /* !PAL */
-#define  NES_REFRESH_RATE     50//60
+#define  NES_REFRESH_RATE     60
 #endif /* !PAL */
 
 #define  MAX_MEM_HANDLERS     32

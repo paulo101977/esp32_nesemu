@@ -621,11 +621,14 @@ static uint16_t renderInGameMenu(int x, int y, uint16_t x1, uint16_t y1, bool xS
 uint16_t rowCrc[NES_SCREEN_HEIGHT];
 uint16_t scaleX[320];
 uint16_t scaleY[240];
+// This is the number of pixels on left and right that are ignored for dirty checks
+// By ignoring the left and right edges, attribute glitches won't cause extra rendering
+#define ignore_border 4
 static int calcCrc(const uint8_t *row)
 {
     int crc = 0;
     int tmp;
-    for (int i = 0; i < 256; i++)
+    for (int i = ignore_border; i < 256 - ignore_border; i++)
     {
         tmp = ((crc >> 8) ^ row[i]) & 0xff;
         tmp ^= tmp >> 4;
@@ -642,7 +645,7 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
     int x, y;
     int xx, yy;
     int i;
-    uint16_t x1, y1, evenPixel, oddPixel;
+    uint16_t x1, y1, evenPixel, oddPixel, backgroundColor;
     uint32_t xv, yv, dc;
     uint32_t temp[16];
     if (data == NULL)
@@ -657,6 +660,9 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
 
     int lastY = -1;
     int lastYshown = 0;
+
+    // Black background
+    backgroundColor = 0;
 
     for (y = 0; y < height; y++)
     {
@@ -717,14 +723,9 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
                 oddPixel = myPalette[(unsigned char)(data[yy][xx])];
                 x++;
                 if (!xStr && (x <= 32 || x >= 288))
-                    evenPixel = oddPixel = 0x00;
+                    evenPixel = oddPixel = backgroundColor;
                 if (!yStr && y >= 224)
-                    evenPixel = oddPixel = 0x00;
-                //"ambilight"
-                /*if(!xStr && x<=32)evenPixel = myPalette[(unsigned char)(data[newy][0])];
-				if(!xStr && x<=32)oddPixel = myPalette[(unsigned char)(data[newy][0])];
-				if(!xStr && x>=288)evenPixel = myPalette[(unsigned char)(data[newy][250])];
-				if(!xStr && x>=288)oddPixel = myPalette[(unsigned char)(data[newy][250])];*/
+                    evenPixel = oddPixel = backgroundColor;
                 if (getShowMenu())
                 {
                     evenPixel = oddPixel = renderInGameMenu(x, y, evenPixel, oddPixel, xStr, yStr);
