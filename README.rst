@@ -5,7 +5,7 @@ This is a much-needed cleanup of the the quick and dirty port of Nofrendo, a Nin
 
 I am improving on the PrettyEffect menu that MittisBootloop created as well.  His in-game menu is so nicely done I will do what I can to preserve that feature as I add more in-game stuff.  Currently I have added SRAM support for save games as well as speed-adjustable turbo buttons.
 
-Caution: Fullscreen can cause graphical glitches and it has bad sound.
+Note: Video stretch modes cause a little slowness, but most games are still very playable now that I've optimized video rendering.  Sound has been improved significantly, though it does have a little noise due to the build-in DAC fighting for time to process sound buffers.  An external DAC could solve this in theory but I don't have any plans to explore that at this time.  Realistically, the sound is sufficient in my opinion but if you find any ways to improve it, I'd love to hear from you.
 
 ESP32+Display+Battery in a NES Controller: https://youtu.be/-xrElh8Uz_s
 
@@ -14,7 +14,7 @@ Warning
 
 Standard caveat: It's open-source and you aren't paying me.  Pull requests are always welcome. :)
 
-Currently I use a partition labeled "Rom" to map roms into memory.  This is because there is no MMAP to a SIPFFS file in the SDK at the time of this writing.  I instead have to dump the file in the the Rom partition so that I can mmap the whole partition.  This works really well, but it also will wear on that spot.  If you are worried, move it to the end of the partition map or something.
+Currently I use a partition labeled "Rom" to map roms into memory.  This is because there is no ability to MMAP a SIPFFS file in the SDK at the time of this writing.  I instead have to dump the file in the the Rom partition so that I can mmap the whole partition.  This works really well, but it also will wear on that spot.  If you are worried, move it to the end of the partition map or something.
 
 Compiling
 ---------
@@ -23,7 +23,7 @@ Use Platform.IO with the ESP32 platform installed, ESP-IDF framework also needs 
 
 You should review and revise the sdkconfig.h file to match your specific board.  My file is configured for a Heltec Wifi Kit with some changes:
 
-    * XTAL frequency set to 26 -- Serial console was going bonkers at the wrong speed until I changed this.
+    * XTAL frequency set to 26 -- Serial console was going bonkers at the wrong speed until I changed this (for Heltec boards)
    
     * Bluetooth and Bluedroid not enabled to save RAM (I hope?)
 
