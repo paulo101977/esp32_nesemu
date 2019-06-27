@@ -5,7 +5,7 @@ This is a much-needed cleanup of the the quick and dirty port of Nofrendo, a Nin
 
 I am improving on the PrettyEffect menu that MittisBootloop created as well.  His in-game menu is so nicely done I will do what I can to preserve that feature as I add more in-game stuff.  Currently I have added SRAM support for save games as well as speed-adjustable turbo buttons.
 
-Note: Video stretch modes cause a little slowness, but most games are still very playable now that I've optimized video rendering.  Sound has been improved significantly, though it does have a little noise due to the build-in DAC fighting for time to process sound buffers.  An external DAC could solve this in theory but I don't have any plans to explore that at this time.  Realistically, the sound is sufficient in my opinion but if you find any ways to improve it, I'd love to hear from you.
+Note: Video stretch modes cause a little slowness, but most games are still very playable now that I've optimized video rendering.  Sound has been improved significantly, though it does have a little noise due to the built-in DAC fighting for time to process sound buffers.  An external DAC could solve this in theory, but I don't have any plans to explore sound improvements at this time since it's rather passable now.  If you find any ways to improve it, I'd love to hear from you, just open an issue or send a pull request.
 
 ESP32+Display+Battery in a NES Controller: https://youtu.be/-xrElh8Uz_s
 
@@ -23,7 +23,7 @@ Use Platform.IO with the ESP32 platform installed, ESP-IDF framework also needs 
 
 You should review and revise the sdkconfig.h file to match your specific board.  My file is configured for a Heltec Wifi Kit with some changes:
 
-    * XTAL frequency set to 26 -- Serial console was going bonkers at the wrong speed until I changed this (for Heltec boards)
+    * XTAL frequency set to 26 -- Serial console was going bonkers at the wrong speed until I changed this (for Heltec boards -- others like WROVER-KIT and similar work at the default setting, 40)
    
     * Bluetooth and Bluedroid not enabled to save RAM (I hope?)
 
@@ -51,7 +51,7 @@ GPIO Controller
 
 You can use this control option if you really love soldering.  Before going this route I recommend you support your local thrift store (HELLO GOODWILL!) to see if you can't get a PSX controller for $5 or something.
 
-To enable GPIO control, define the CONFIG_HW_CONTROLLER_GPIO constant and undefine (comment out) CONFIG_HW_CONTROLLER_PSX.
+To enable GPIO control, define the CONFIG_HW_CONTROLLER_GPIO constant and undefine (comment out) CONFIG_HW_CONTROLLER_PSX.  Make sure whatever pins you use are not assigned to other functions, such as DAC or internal flash!
 
    ======   ===============================
    Button   GPIO CONSTANT
