@@ -37,7 +37,7 @@
 #define PIN_NUM_CS CONFIG_HW_LCD_CS_GPIO
 #define PIN_NUM_DC CONFIG_HW_LCD_DC_GPIO
 #define PIN_NUM_RST CONFIG_HW_LCD_RESET_GPIO
-//#define PIN_NUM_BCKL CONFIG_HW_LCD_BL_GPIO
+#define PIN_NUM_BCKL CONFIG_HW_LCD_BL_GPIO
 #define LCD_SEL_CMD() GPIO.out_w1tc = (1 << PIN_NUM_DC)  // Low to send command
 #define LCD_SEL_DATA() GPIO.out_w1ts = (1 << PIN_NUM_DC) // High to send data
 #define LCD_RST_SET() GPIO.out_w1ts = (1 << PIN_NUM_RST)
@@ -45,15 +45,16 @@
 
 #define LEDC_LS_TIMER LEDC_TIMER_1
 #define LEDC_LS_MODE LEDC_LOW_SPEED_MODE
-#define PIN_NUM_BCKL 27 //CONFIG_HW_LCD_BL_GPIO
 #define LEDC_LS_CH3_CHANNEL LEDC_CHANNEL_3
 
+#if PIN_NUM_BCKL >= 0
 #if CONFIG_HW_INV_BL
 #define LCD_BKG_ON() GPIO.out_w1tc = (1 << PIN_NUM_BCKL)  // Backlight ON
 #define LCD_BKG_OFF() GPIO.out_w1ts = (1 << PIN_NUM_BCKL) //Backlight OFF
 #else
 #define LCD_BKG_ON() GPIO.out_w1ts = (1 << PIN_NUM_BCKL)  // Backlight ON
 #define LCD_BKG_OFF() GPIO.out_w1tc = (1 << PIN_NUM_BCKL) //Backlight OFF
+#endif
 #endif
 
 #define SPI_NUM 0x3
@@ -67,24 +68,26 @@
 
 ledc_channel_config_t ledc_channel;
 
-/*void initBCKL(){
-	ledc_timer_config_t ledc_timer = {
+#if PIN_NUM_BCKL >= 0
+*void initBCKL()
+{
+    ledc_timer_config_t ledc_timer = {
         .duty_resolution = LEDC_TIMER_13_BIT,
         .freq_hz = 500,
         .speed_mode = LEDC_LS_MODE,
-		.timer_num = LEDC_LS_TIMER           
-    };
-    
+        .timer_num = LEDC_LS_TIMER};
+
     ledc_timer_config(&ledc_timer);
-	
-	ledc_channel.channel    = LEDC_LS_CH3_CHANNEL;
-	ledc_channel.duty       = 500;
-	ledc_channel.gpio_num   = PIN_NUM_BCKL;
-	ledc_channel.speed_mode = LEDC_LS_MODE;
-	ledc_channel.timer_sel  = LEDC_LS_TIMER;
-								
-	ledc_channel_config(&ledc_channel);
-}*/
+
+    ledc_channel.channel = LEDC_LS_CH3_CHANNEL;
+    ledc_channel.duty = 500;
+    ledc_channel.gpio_num = PIN_NUM_BCKL;
+    ledc_channel.speed_mode = LEDC_LS_MODE;
+    ledc_channel.timer_sel = LEDC_LS_TIMER;
+
+    ledc_channel_config(&ledc_channel);
+}
+#endif
 
 void setBrightness(int bright)
 {
@@ -122,7 +125,9 @@ static void LCD_WriteData(const uint8_t data)
 
 static void ILI9341_INITIAL()
 {
+#if PIN_NUM_BCKL >= 0
     LCD_BKG_ON();
+#endif
     //------------------------------------Reset Sequence-----------------------------------------//
 
     LCD_RST_SET();
@@ -373,11 +378,14 @@ static void ILI9341_INITIAL()
 
 static void ili_gpio_init()
 {
-    // TODO: Resolve hard-coded constants
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO21_U, 2); //DC PIN
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO18_U, 2); //RESET PIN
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, 2);  //BKL PIN
-    WRITE_PERI_REG(GPIO_ENABLE_W1TS_REG, BIT21 | BIT18 | BIT5);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_DC], 2);  //DC PIN
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_RST], 2); //RESET PIN
+#if PIN_NUM_BCKL >= 0
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_BCKL, 2);  //BKL PIN
+    WRITE_PERI_REG(GPIO_ENABLE_W1TS_REG, 1 << PIN_NUM_DC | 1 << PIN_NUM_RST | 1 << PIN_NUM_BCKL);
+#else
+    WRITE_PERI_REG(GPIO_ENABLE_W1TS_REG, 1 << PIN_NUM_DC | 1 << PIN_NUM_RST);
+#endif
 }
 
 static void spi_master_init()
@@ -386,12 +394,11 @@ static void spi_master_init()
     periph_module_enable(PERIPH_SPI_DMA_MODULE);
 
     ets_printf("lcd spi pin mux init ...\r\n");
-    // TODO: Resolve hard-coded constants
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO19_U, 2);
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO23_U, 2);
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO22_U, 2);
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO25_U, 2);
-    WRITE_PERI_REG(GPIO_ENABLE_W1TS_REG, BIT19 | BIT23 | BIT22);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_CS], 2);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_CLK], 2);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_MOSI], 2);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[PIN_NUM_MISO], 2);
+    WRITE_PERI_REG(GPIO_ENABLE_W1TS_REG, 1 << PIN_NUM_CS | 1 << PIN_NUM_CLK | 1 << PIN_NUM_MOSI);
 
     ets_printf("lcd spi signal init\r\n");
     gpio_matrix_in(PIN_NUM_MISO, VSPIQ_IN_IDX, 0);
@@ -653,7 +660,8 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
 
     dc = (1 << PIN_NUM_DC);
 
-    if (getShowMenu() != lastShowMenu) {
+    if (getShowMenu() != lastShowMenu)
+    {
         memset(rowCrc, 0, sizeof rowCrc);
     }
     lastShowMenu = getShowMenu();
@@ -667,16 +675,22 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
     for (y = 0; y < height; y++)
     {
         yy = yStr ? scaleY[y] : y;
-        if (lastY == yy) {
+        if (lastY == yy)
+        {
             if (!lastYshown && !getShowMenu())
                 continue;
-        } else {
-            lastY = yy;            
+        }
+        else
+        {
+            lastY = yy;
             uint16_t crc = calcCrc(data[yy]);
-            if (crc == rowCrc[yy] && !getShowMenu()) {
+            if (crc == rowCrc[yy] && !getShowMenu())
+            {
                 lastYshown = false;
                 continue;
-            } else {
+            }
+            else
+            {
                 lastYshown = true;
                 rowCrc[yy] = crc;
             }
@@ -743,15 +757,20 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
 
     if (getShutdown())
         setBrightness(getBright());
+#if PIN_NUM_BCKL >= 0
     if (getBright() == -1)
         LCD_BKG_OFF();
+#endif
 }
 
-void precalculateLookupTables() {
-    for (int i=0; i < 320; i++) {
+void precalculateLookupTables()
+{
+    for (int i = 0; i < 320; i++)
+    {
         scaleX[i] = i * 0.8;
     }
-    for (int i=0; i < 240; i++) {
+    for (int i = 0; i < 240; i++)
+    {
         scaleY[i] = i * 0.94;
     }
 }
@@ -761,8 +780,10 @@ void ili9341_init()
     spi_master_init();
     ili_gpio_init();
     ILI9341_INITIAL();
-    //LCD_BKG_ON();
-    //initBCKL();
+#if PIN_NUM_BCKL >= 0
+    LCD_BKG_ON();
+    initBCKL();
+#endif
     memset(rowCrc, 0x1234, sizeof rowCrc);
     precalculateLookupTables();
 }
