@@ -4,3 +4,4 @@ build/
 sdkconfig.old
 *.nes
 
+/~$wiring schematic revised.xlsx
