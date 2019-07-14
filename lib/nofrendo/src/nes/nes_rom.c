@@ -101,6 +101,8 @@ void rom_savesram(rominfo_t *rominfo)
          fwrite(rominfo->sram, SRAM_BANK_LENGTH, rominfo->sram_banks, fp);
          fclose(fp);
          log_printf("Wrote battery RAM to %s.\n", fn);
+      } else {
+         log_printf("Write file handle was null for %s.\n", fn);
       }
    }
 }
