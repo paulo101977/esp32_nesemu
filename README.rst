@@ -108,7 +108,7 @@ Connect also 3.3V to the Buttons
 Sound
 -----
 
-Connect one Speaker-Pin to GPIO 26 and the other one to GND
+Connect one Speaker-Pin to GPIO 25 and the other one to GND
 
 ROM
 ---
