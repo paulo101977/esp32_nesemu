@@ -46,6 +46,33 @@ To display the NES output, please connect a 320x240 ili9341-based SPI display to
 
 Also connect the power supply and ground. For now, the LCD is controlled using a SPI peripheral, fed using the 2nd CPU. This is less than ideal; feeding the SPI controller using DMA is better, but was left out due to this being a proof of concept.
 
+PSX Controller
+--------------
+
+   PSX controller support works for PS1/PS2 controllers (no analog controller support though, just digital right now.)  Comment out or undefine the GPIO controller enabe setting as it overrides PSX settings.
+   
+   =======   ===========   =======================================
+   PSX Pin   Description   Constant
+   =======   ===========   =======================================
+   --        Enable PSX    CONFIG_HW_CONTROLLER_PSX
+   1         DAT / MISO    CONFIG_HW_PSX_DAT
+   2         CMD / MOSI    CONFIG_HW_PSX_CMD
+   3         Vibration     n/a (vibration not supported right now)
+   4         GND
+   5         VCC
+   6         ATT / CS      CONFIG_HW_PSX_ATT
+   7         CLK / SCK     CONFIG_HW_PSX_CLK
+   =======   ===========   =======================================
+
+   Other mappings to PSX buttons are defined and managed in the lib/nofrendo/src/esp32/psxcontroller.c file.  Of main interest is this part:
+
+```#define A_BUTTON PSX_CIRCLE
+#define B_BUTTON PSX_X
+#define TURBO_A_BUTTON PSX_TRIANGLE
+#define TURBO_B_BUTTON PSX_SQUARE
+#define MENU_BUTTON PSX_L1
+#define POWER_BUTTON PSX_R1```
+
 GPIO Controller
 ---------------
 
@@ -56,10 +83,11 @@ To enable GPIO control, define the CONFIG_HW_CONTROLLER_GPIO constant and undefi
    ======   ===============================
    Button   GPIO CONSTANT
    ======   ===============================
+   Enable   CONFIG_HW_CONTROLLER_GPIO
    Up       CONFIG_HW_GPIO_UP
    Down     CONFIG_HW_GPIO_DOWN
    Right    CONFIG_HW_GPIO_RIGHT
-   Left     CONFIG_HW_GPIO_RIGHT
+   Left     CONFIG_HW_GPIO_LEFT
    Select   CONFIG_HW_GPIO_SELECT
    Start    CONFIG_HW_GPIO_START
    B        CONFIG_HW_GPIO_B
@@ -83,9 +111,26 @@ ROM
 This includes no Roms. You'll have to flash your own Roms and modify the roms.txt according to your needs.
 Don't change format used in roms.txt because you might cause the menu to load incorrectly.  Review the file for further instructions.
 
+For SPIFFS (SRAM), Use the Platform.IO task for uploading the /data folder into the SPIFFS volume, which should contain roms.txt and other rom files.
+
+SD Card settings
+----------------
+
 You have the option to enable SD Card support (see the platformio.ini file) via "CONFIG_SD_CARD".  If you define this variable then also assign the pins for the SPI bus as well.  If you do not define this option it will default to SPIFFS on the SRAM, which requires re-flashing the partition.  SD Card support, on the other hand, just requires putting the "roms.txt" file and roms in the root folder of the SD Card.
 
-For SPIFFS (SRAM), Use the Platform.IO task for uploading the /data folder into the SPIFFS volume, which shoudl contain roms.txt and other rom files.
+   ======  ===========  ===============================
+   SD_PIN  DESCRIPTION  CONSTANT
+   ======  ===========  ===============================
+   --      Enable SD    CONFIG_SD_CARD
+   1       CS           CONFIG_SD_CS
+   2       MOSI         CONFIG_SD_MOSI
+   3       GND
+   4       VCC
+   5       Clock/SCK    CONFIG_SD_SCK
+   6       GND
+   7       MISO         CONFIG_SD_MISO
+   ======  ===========  ===============================
+
 
 Adjusting in-game settings
 --------------------------
