@@ -3,7 +3,7 @@ ESP32-NESEMU, a Nintendo Entertainment System emulator for the ESP32
 
 This is a much-needed cleanup of the the quick and dirty port of Nofrendo, a Nintendo Entertainment System emulator (original by Espressif, https://github.com/espressif/esp32-nesemu).
 
-I am improving on the PrettyEffect menu that MittisBootloop created as well.  His in-game menu is so nicely done I will do what I can to preserve that feature as I add more in-game stuff.  Currently I have added SRAM support for save games as well as speed-adjustable turbo buttons.
+I am improving on the PrettyEffect menu that MittisBootloop created as well.  His in-game menu is so nicely done I will do what I can to preserve that feature as I add more in-game stuff.  Currently I have added SRAM (SPIFFS) and SD Card support for save games as well as speed-adjustable turbo buttons.
 
 Note: Video stretch modes cause a little slowness, but most games are still very playable now that I've optimized video rendering.  Sound has been improved significantly, though it does have a little noise due to the built-in DAC fighting for time to process sound buffers.  An external DAC could solve this in theory, but I don't have any plans to explore sound improvements at this time since it's rather passable now.  If you find any ways to improve it, I'd love to hear from you, just open an issue or send a pull request.
 
@@ -83,7 +83,9 @@ ROM
 This includes no Roms. You'll have to flash your own Roms and modify the roms.txt according to your needs.
 Don't change format used in roms.txt because you might cause the menu to load incorrectly.  Review the file for further instructions.
 
-Use the Platform.IO task for uploading the SPIFFS volume in order to upload roms.txt and rom files.
+You have the option to enable SD Card support (see the platformio.ini file) via "CONFIG_SD_CARD".  If you define this variable then also assign the pins for the SPI bus as well.  If you do not define this option it will default to SPIFFS on the SRAM, which requires re-flashing the partition.  SD Card support, on the other hand, just requires putting the "roms.txt" file and roms in the root folder of the SD Card.
+
+For SPIFFS (SRAM), Use the Platform.IO task for uploading the /data folder into the SPIFFS volume, which shoudl contain roms.txt and other rom files.
 
 Adjusting in-game settings
 --------------------------
