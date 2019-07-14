@@ -64,14 +64,14 @@ PSX Controller
    7         CLK / SCK     CONFIG_HW_PSX_CLK
    =======   ===========   =======================================
 
-   Other mappings to PSX buttons are defined and managed in the lib/nofrendo/src/esp32/psxcontroller.c file.  Of main interest is this part:
+Other mappings to PSX buttons are defined and managed in the lib/nofrendo/src/esp32/psxcontroller.c file.  Of main interest is this part:
 
-```#define A_BUTTON PSX_CIRCLE
-#define B_BUTTON PSX_X
-#define TURBO_A_BUTTON PSX_TRIANGLE
-#define TURBO_B_BUTTON PSX_SQUARE
-#define MENU_BUTTON PSX_L1
-#define POWER_BUTTON PSX_R1```
+    #define A_BUTTON PSX_CIRCLE::
+    #define B_BUTTON PSX_X::
+    #define TURBO_A_BUTTON PSX_TRIANGLE::
+    #define TURBO_B_BUTTON PSX_SQUARE::
+    #define MENU_BUTTON PSX_L1::
+    #define POWER_BUTTON PSX_R1::
 
 GPIO Controller
 ---------------
