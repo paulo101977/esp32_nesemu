@@ -49,7 +49,7 @@ Also connect the power supply and ground. For now, the LCD is controlled using a
 PSX Controller
 --------------
 
-   PSX controller support works for PS1/PS2 controllers (no analog controller support though, just digital right now.)  Comment out or undefine the GPIO controller enabe setting as it overrides PSX settings.
+PSX controller support works for PS1/PS2 controllers (no analog controller support though, just digital right now.)  Comment out or undefine the GPIO controller enabe setting as it overrides PSX settings.
    
    =======   ===========   =======================================
    PSX Pin   Description   Constant
