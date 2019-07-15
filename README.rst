@@ -44,7 +44,7 @@ To display the NES output, please connect a 320x240 ili9341-based SPI display to
     LED    27     CONFIG_HW_LCD_BL_GPIO
     =====  ====== ========================
 
-Also connect the power supply and ground. For now, the LCD is controlled using a SPI peripheral, fed using the 2nd CPU. This is less than ideal; feeding the SPI controller using DMA is better, but was left out due to this being a proof of concept.
+Also connect the power supply and ground. For now, the LCD is controlled using a SPI peripheral, fed using the 2nd CPU. This is less than ideal; feeding the SPI controller using DMA is better, but also requires a lot of memory.  A compromise is that each row is tracked with a CRC16 value to see if it needs to be updated or not.  This prevents sending extra data and improves framerate considerably.
 
 PSX Controller
 --------------
@@ -81,7 +81,7 @@ Other mappings to PSX buttons are defined and managed in the lib/nofrendo/src/es
 GPIO Controller
 ---------------
 
-You can use this control option if you really love soldering.  Before going this route I recommend you support your local thrift store (HELLO GOODWILL!) to see if you can't get a PSX controller for $5 or something.
+You can use this control option if you really love soldering.
 
 To enable GPIO control, define the CONFIG_HW_CONTROLLER_GPIO constant and undefine (comment out) CONFIG_HW_CONTROLLER_PSX.  Make sure whatever pins you use are not assigned to other functions, such as DAC or internal flash!
 
@@ -108,12 +108,12 @@ Connect also 3.3V to the Buttons
 Sound
 -----
 
-Connect one Speaker-Pin to GPIO 25 and the other one to GND
+Connect one Speaker-Pin to GPIO 25 and the other one to GND.  I recommend using a Class-D amplifier to boost the volume coming out of this because it's not going to be very loud on its own.
 
 ROM
 ---
 
-This includes no Roms. You'll have to flash your own Roms and modify the roms.txt according to your needs.
+This includes no Roms. You'll have to flash your own Roms and modify the roms.txt (see /data) according to your needs.
 Don't change format used in roms.txt because you might cause the menu to load incorrectly.  Review the file for further instructions.
 
 For SPIFFS (SRAM), Use the Platform.IO task for uploading the /data folder into the SPIFFS volume, which should contain roms.txt and other rom files.
@@ -121,7 +121,7 @@ For SPIFFS (SRAM), Use the Platform.IO task for uploading the /data folder into 
 SD Card settings
 ----------------
 
-You have the option to enable SD Card support (see the platformio.ini file) via "CONFIG_SD_CARD".  If you define this variable then also assign the pins for the SPI bus as well.  If you do not define this option it will default to SPIFFS on the SRAM, which requires re-flashing the partition.  SD Card support, on the other hand, just requires putting the "roms.txt" file and roms in the root folder of the SD Card.
+You have the option to enable SD Card support (see the platformio.ini file) via "CONFIG_SD_CARD".  If you define this variable then also assign the pins for the SPI bus as well.  If you do not define this option it will default to SPIFFS on the SRAM, which requires re-flashing the partition to update the files.  SD Card support, on the other hand, just requires putting the "roms.txt" file and roms in the root folder of the SD Card.  It's also a lot faster so you should expect little or no lag in games that make frequent SRAM updates like Zelda.
 
    ======  ===========  ===============================
    SD_PIN  DESCRIPTION  CONSTANT
