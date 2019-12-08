@@ -22,7 +22,7 @@ I recommend printing with a layer height of 0.15 or smaller to ensure a better s
 
 This really depends on if you want to experiment or make everything permanent.  For experimentation use female/female prototype wiring and solder male headers to everything.  This makes it much easier to confirm everything works.
 
-Remove all the srews from the PSX controller and carefully dismantle it without breaking any wires going to the shoulder buttons boards.  I haven't decided where to put them in the final design but hopefully it will involve using the original wiring for simplicity.  Save all the screws and innards as they will be reused.
+Remove all the screws from the PSX controller and carefully dismantle it without breaking any wires going to the shoulder buttons boards.  I haven't decided where to put them in the final design but hopefully it will involve using the original wiring for simplicity.  Save all the screws and innards as they will be reused.
 
 You will most likely need to desolder the PSX controller wiring plug from the board and solder new wires, but that's your preference.  Note the wiring order on the board since it's all color-coded.  More information about the PSX pinout is in the main readme in the top directory of this project.
 
