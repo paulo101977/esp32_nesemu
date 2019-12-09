@@ -16,7 +16,7 @@ Please note, this is still being designed and your results may vary.  To date I 
 
 ### Printing
 
-I recommend printing with a layer height of 0.15 or smaller to ensure a better surface finish and also to make sure there are many layers supporting the screw holes.  If you are using a material that supports post-print annealing (e.g. bake it in the oven) that would improve rigidity but is hopefully not necessary.  I recommend printing with a 0.4 nozzle or smaller because those screw holes and gaps for the controller buttons are really small, otherwise expect that you will need to do post-print adjustments.  Final note is that if you're using Cura pay attention to the advanced option "Slicing tolerance" which can make a big difference in how well things will fit.  I've been trying both "includsive" and "middle" but your mileage may vary.
+I recommend printing with a layer height of 0.15 or smaller to ensure a better surface finish and also to make sure there are many layers supporting the screw holes.  If you are using a material that supports post-print annealing (e.g. bake it in the oven) that would improve rigidity but is hopefully not necessary.  I recommend printing with a 0.4 nozzle or smaller because those screw holes and gaps for the controller buttons are really small, otherwise expect that you will need to do post-print adjustments.  Final note is that if you're using Cura pay attention to the advanced option "Slicing tolerance" which can make a big difference in how well things will fit.  I've been trying both "inclusive" and "middle" but your mileage may vary.
 
 ### Assembling
 
