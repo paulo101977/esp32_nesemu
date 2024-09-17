@@ -416,7 +416,7 @@ static char* selectRomFromMenu(spi_device_handle_t spi)
     return NULL;
 }
 
-ledc_channel_config_t ledc_channel;
+ledc_channel_config_t m_ledc_channel;
 
 void initBl()
 {
@@ -428,14 +428,14 @@ void initBl()
 
     ledc_timer_config(&ledc_timer);
 
-    ledc_channel.channel = LEDC_LS_CH3_CHANNEL;
+    m_ledc_channel.channel = LEDC_LS_CH3_CHANNEL;
     //ledc_channel.duty       = 2000;
-    ledc_channel.gpio_num = PIN_NUM_BCKL;
-    ledc_channel.speed_mode = LEDC_LS_MODE;
-    ledc_channel.timer_sel = LEDC_LS_TIMER;
+    m_ledc_channel.gpio_num = PIN_NUM_BCKL;
+    m_ledc_channel.speed_mode = LEDC_LS_MODE;
+    m_ledc_channel.timer_sel = LEDC_LS_TIMER;
 
     #if PIN_NUM_BCKL >= 0
-    ledc_channel_config(&ledc_channel);
+    ledc_channel_config(&m_ledc_channel);
     #endif
 }
 
@@ -506,3 +506,6 @@ char* runMenu()
     printf("Menu selection is %s\n", filename);
     return filename;
 }
+
+MenuEntry *menuEntries;
+int entryCount;

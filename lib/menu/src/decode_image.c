@@ -25,8 +25,9 @@ format if you want to use a different image file.
 #include <string.h>
 
 //Reference the binary-included jpeg file -- defined by the build
-extern const uint8_t image_jpg_start[] asm("_binary_lib_menu_data_image_jpg_start");
-extern const uint8_t image_jpg_end[] asm("_binary_lib_menu_data_image_jpg_end");
+// TODO: verify if this code is necessary
+// extern const uint8_t image_jpg_start[] asm("_binary_lib_menu_data_image_jpg_start");
+// extern const uint8_t image_jpg_end[] asm("_binary_lib_menu_data_image_jpg_end");
 //Define the height and width of the jpeg file. Make sure this matches the actual jpeg
 //dimensions.
 #define IMAGE_W 113//336
@@ -117,7 +118,8 @@ esp_err_t decode_image(uint16_t ***pixels)
     }
 
     //Populate fields of the JpegDev struct.
-    jd.inData=image_jpg_start;
+    // TODO: verify if this code is necessary
+    // jd.inData=image_jpg_start;
     jd.inPos=0;
     jd.outData=*pixels;
     jd.outW=IMAGE_W;

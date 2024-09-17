@@ -21,5 +21,5 @@ typedef struct menuEntry
 	char name[FILENAME_LENGTH+1];
 	char fileName[FILENAME_LENGTH+1];
 } MenuEntry;
-int entryCount;
-MenuEntry *menuEntries;
+extern int entryCount;
+extern MenuEntry *menuEntries;

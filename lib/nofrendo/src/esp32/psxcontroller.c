@@ -24,6 +24,9 @@
 #include "sdkconfig.h"
 #include "pretty_effect.h"
 #include "esp_sleep.h"
+#include "soc/soc.h"
+#include "rom/gpio.h"
+#include "soc/gpio_reg.h"
 
 #define PSX_CLK CONFIG_HW_PSX_CLK
 #define PSX_DAT CONFIG_HW_PSX_DAT
@@ -353,6 +356,11 @@ int getVolume()
 bool getShutdown()
 {
 	return shutdown;
+}
+
+void initGPIO(int gpioNo){
+	gpio_set_direction(gpioNo, GPIO_MODE_INPUT);
+	gpio_pulldown_en(gpioNo);
 }
 
 void psxcontrollerInit()
