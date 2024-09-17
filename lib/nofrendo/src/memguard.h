@@ -30,28 +30,28 @@
 #undef strdup
 #endif
 
-#ifdef NOFRENDO_DEBUG
+// #ifdef NOFRENDO_DEBUG
 
-#define  malloc(s)   _my_malloc((s), __FILE__, __LINE__)
-#define  free(d)     _my_free((void **) &(d), __FILE__, __LINE__)
-#define  strdup(s)   _my_strdup((s), __FILE__, __LINE__)
+// #define  malloc(s)   _my_malloc((s), __FILE__, __LINE__)
+// #define  free(d)     _my_free((void **) &(d), __FILE__, __LINE__)
+// #define  strdup(s)   _my_strdup((s), __FILE__, __LINE__)
 
-extern void *_my_malloc(int size, char *file, int line);
-extern void _my_free(void **data, char *file, int line);
-extern char *_my_strdup(const char *string, char *file, int line);
+// extern void *_my_malloc(int size, char *file, int line);
+// extern void _my_free(void **data, char *file, int line);
+// extern char *_my_strdup(const char *string, char *file, int line);
 
-#else /* !NORFRENDO_DEBUG */
+// #else /* !NORFRENDO_DEBUG */
 
 /* Non-debugging versions of calls */
-#define  malloc(s)   _my_malloc((s))
-#define  free(d)     _my_free((void **) &(d))
+// #define  malloc(s)   _my_malloc((s))
+// #define  free(d)     _my_free((void **) &(d))
 #define  strdup(s)   _my_strdup((s))
 
 extern void *_my_malloc(int size);
 extern void _my_free(void **data);
 extern char *_my_strdup(const char *string);
 
-#endif /* !NOFRENDO_DEBUG */
+// #endif /* !NOFRENDO_DEBUG */
 
 
 extern void mem_cleanup(void);

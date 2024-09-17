@@ -467,13 +467,15 @@ rominfo_t *rom_load(const char *filename)
    ** we have to always allocate it -- bleh!
    ** UNIF, TAKE ME AWAY!  AAAAAAAAAA!!!
    */
-   if (rom_allocsram(rominfo))
+   if (rom_allocsram(rominfo)) {
       goto _fail;
+   }
 
       rom_loadtrainer(&rom, rominfo);
 
-	if (rom_loadrom(&rom, rominfo))
+	if (rom_loadrom(&rom, rominfo)) {
       goto _fail;
+   }
 
    rom_loadsram(rominfo);
 

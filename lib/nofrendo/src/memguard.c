@@ -245,88 +245,88 @@ static void mem_deleteblock(void *data, char *file, int line)
 #endif /* NOFRENDO_DEBUG */
 
 /* debugger-friendly versions of calls */
-#ifdef NOFRENDO_DEBUG
+// #ifdef NOFRENDO_DEBUG
 
 /* allocates memory and clears it */
-void *_my_malloc(int size, char *file, int line)
-{
-   void *temp;
-   char fail[256];
+// void *_my_malloc(int size, char *file, int line)
+// {
+//    void *temp;
+//    char fail[256];
 
-   if (NULL == mem_record && false != mem_debug)
-      mem_init();
+//    if (NULL == mem_record && false != mem_debug)
+//       mem_init();
 
-   if (false != mem_debug)
-      temp = mem_guardalloc(size, GUARD_LENGTH);
-   else
-      temp = malloc(size);
+//    if (false != mem_debug)
+//       temp = mem_guardalloc(size, GUARD_LENGTH);
+//    else
+//       temp = malloc(size);
 
-   printf("Malloc: %d at %s:%d\n", size, file, line);
-   if (NULL == temp)
-   {
-      sprintf(fail, "malloc: out of memory at line %d of %s.  block size: %d\n",
-              line, file, size);
-      ASSERT_MSG(fail);
-   }
+//    printf("Malloc: %d at %s:%d\n", size, file, line);
+//    if (NULL == temp)
+//    {
+//       sprintf(fail, "malloc: out of memory at line %d of %s.  block size: %d\n",
+//               line, file, size);
+//       ASSERT_MSG(fail);
+//    }
 
-   if (false != mem_debug)
-      mem_addblock(temp, size, file, line);
+//    if (false != mem_debug)
+//       mem_addblock(temp, size, file, line);
 
-   mem_blockcount++;
+//    mem_blockcount++;
 
-   return temp;
-}
+//    return temp;
+// }
 
-/* free a pointer allocated with my_malloc */
-void _my_free(void **data, char *file, int line)
-{
-   char fail[256];
+// /* free a pointer allocated with my_malloc */
+// void _my_free(void **data, char *file, int line)
+// {
+//    char fail[256];
 
-   if (NULL == data || NULL == *data)
-   {
-      sprintf(fail, "free: attempted to free NULL pointer at line %d of %s\n",
-              line, file);
-      ASSERT_MSG(fail);
-   }
+//    if (NULL == data || NULL == *data)
+//    {
+//       sprintf(fail, "free: attempted to free NULL pointer at line %d of %s\n",
+//               line, file);
+//       ASSERT_MSG(fail);
+//    }
 
-   /* if this is true, we are in REAL trouble */
-   if (0 == mem_blockcount)
-   {
-      ASSERT_MSG("free: attempted to free memory when no blocks available");
-   }
+//    /* if this is true, we are in REAL trouble */
+//    if (0 == mem_blockcount)
+//    {
+//       ASSERT_MSG("free: attempted to free memory when no blocks available");
+//    }
 
-   mem_blockcount--; /* dec our block count */
+//    mem_blockcount--; /* dec our block count */
 
-   if (false != mem_debug)
-   {
-      mem_deleteblock(*data, file, line);
-      mem_freeguardblock(*data, GUARD_LENGTH);
-   }
-   else
-   {
-      free(*data);
-   }
+//    if (false != mem_debug)
+//    {
+//       mem_deleteblock(*data, file, line);
+//       mem_freeguardblock(*data, GUARD_LENGTH);
+//    }
+//    else
+//    {
+//       free(*data);
+//    }
 
-   *data = NULL; /* NULL our source */
-}
+//    *data = NULL; /* NULL our source */
+// }
 
-char *_my_strdup(const char *string, char *file, int line)
-{
-   char *temp;
+// char *_my_strdup(const char *string, char *file, int line)
+// {
+//    char *temp;
 
-   if (NULL == string)
-      return NULL;
+//    if (NULL == string)
+//       return NULL;
 
-   temp = (char *) _my_malloc(strlen(string) + 1, file, line);
-   if (NULL == temp)
-      return NULL;
+//    temp = (char *) _my_malloc(strlen(string) + 1, file, line);
+//    if (NULL == temp)
+//       return NULL;
 
-   strcpy(temp, string);
+//    strcpy(temp, string);
 
-   return temp;
-}
+//    return temp;
+// }
 
-#else /* !NOFRENDO_DEBUG */
+// #else /* !NOFRENDO_DEBUG */
 
 /* allocates memory and clears it */
 void *_my_malloc(int size)
@@ -377,7 +377,7 @@ char *_my_strdup(const char *string)
    return temp;
 }
 
-#endif /* !NOFRENDO_DEBUG */
+// #endif /* !NOFRENDO_DEBUG */
 
 /* check for orphaned memory handles */
 void mem_checkleaks(void)

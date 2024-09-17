@@ -1,6 +1,7 @@
 #include "freertos/FreeRTOS.h"
 #include "esp_system.h"
 #include "esp_event.h"
+#include "esp_event_legacy.h"
 #include "esp_event_loop.h"
 #include "esp_partition.h"
 #include "esp_err.h"
@@ -8,7 +9,8 @@
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
 // #include "driver/sdmmc_host.h"
- #include "driver/sdspi_host.h"
+#include "driver/sdspi_host.h"
+#include "sdspi_host_legacy.h"
 #include "sdmmc_cmd.h"
 #include "esp_spiffs.h"
 #include "nvs_flash.h"
@@ -16,8 +18,11 @@
 #include "psxcontroller.h"
 #include "nofrendo.h"
 #include "menu.h"
+#include "spi_flash_mmap.h"
+#include "sys/stat.h"
 // #include "esp_bt.h"
 
+#define NOFRENDO_DEBUG 1
 #define READ_BUFFER_SIZE 64
 
 #define ASSERT_ESP_OK(returnCode, message)                          \
@@ -182,7 +187,8 @@ esp_err_t registerSpiffs()
 	esp_err_t ret = esp_vfs_spiffs_register(&conf);
 
 	ASSERT_ESP_OK(ret, "Failed to mount SPIFFS partition.");
-	struct stat st;
+	typedef struct stat struc_date;
+	struc_date st;
 	if (stat(ROM_LIST, &st) != 0)
 	{
 		printf("Cannot locate rom list in %s", ROM_LIST);

@@ -444,9 +444,11 @@ void nes_emulate(void)
          }
       }
       // Reset watchdog timer
-      TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
-      TIMERG0.wdt_feed=1;
-      TIMERG0.wdt_wprotect=0;
+      // TODO: FIXME
+      // TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
+      // TIMERG0.wdt_feed=1;
+      // TODO: FIXME
+      // TIMERG0.wdt_wprotect=0;
 
       if (nes.saveSramCountdown > 0)
       {

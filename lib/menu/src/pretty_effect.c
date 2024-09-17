@@ -15,7 +15,7 @@
 #include "decode_image.h"
 #include "driver/gpio.h"
 #include "charPixels.c"
-#include "esp_deep_sleep.h"
+#include "esp_sleep.h"
 #include "menu.h"
 #include "psxcontroller.h"
 

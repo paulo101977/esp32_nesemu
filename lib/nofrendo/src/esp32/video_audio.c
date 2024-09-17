@@ -268,9 +268,11 @@ static void videoTask(void *arg)
 		xQueueReceive(vidQueue, &bmp, portMAX_DELAY);
 		ili9341_write_frame(x, y, xWidth, yHight, (const uint8_t **)bmp->line, getXStretch(), getYStretch());
 		// Reset watchdog timer
-		TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
-		TIMERG0.wdt_feed = 1;
-		TIMERG0.wdt_wprotect = 0;
+		// TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
+		// TODO FIXME
+		// TIMERG0.wdt_feed = 1;
+		// TODO FIXME
+		// TIMERG0.wdt_wprotect = 0;
 	}
 }
 

@@ -30,6 +30,7 @@
 #include "driver/ledc.h"
 #include "pretty_effect.h"
 #include "nes.h"
+#include "soc/gpio_periph.h"
 
 #define PIN_NUM_MISO CONFIG_HW_LCD_MISO_GPIO
 #define PIN_NUM_MOSI CONFIG_HW_LCD_MOSI_GPIO
