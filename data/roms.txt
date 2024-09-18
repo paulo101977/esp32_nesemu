@@ -1,12 +1,12 @@
 No.	Icon	Name	Filename
 1.	$	Super Mario Bros 1	smb1.nes
+*#*
 2.	"	Super Mario Bros 3	smb3.nes
 3.	;	Tetris	tetris.nes
 4.	=	Legend of Zelda	zelda1.nes
 5.	+	Adventure of Link	zelda2.nes
 6.	}	Galaga	galaga.nes
 7.	;	Metroid	metroid.nes
-*#*
 NOTE: The rest of this file is ignored by the program
 2.	%	Super Mario Bros 2  smb2.nes
 7.	/	Contra  contra.nes

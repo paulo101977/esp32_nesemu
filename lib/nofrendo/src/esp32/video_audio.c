@@ -16,8 +16,8 @@
 #include <freertos/timers.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
-#include "soc/timer_group_struct.h"
-#include "soc/timer_group_reg.h"
+// #include "soc/timer_group_struct.h"
+// #include "soc/timer_group_reg.h"
 #include "pretty_effect.h"
 #include <math.h>
 #include <string.h>
@@ -36,8 +36,10 @@
 #include "driver/i2s.h"
 #include "sdkconfig.h"
 #include <spi_lcd.h>
-
+#include "soc/rtc_cntl_struct.h"
 #include <psxcontroller.h>
+#include <soc/timer_group_struct.h>
+#include <soc/timer_periph.h>
 
 #define AUDIO_SAMPLERATE 22050
 #define AUDIO_BUFFER_LENGTH 64
@@ -268,10 +270,9 @@ static void videoTask(void *arg)
 		xQueueReceive(vidQueue, &bmp, portMAX_DELAY);
 		ili9341_write_frame(x, y, xWidth, yHight, (const uint8_t **)bmp->line, getXStretch(), getYStretch());
 		// Reset watchdog timer
+		// TODO: Trying to understand if this code is necessary for esp32 dev kit and other hardware
 		// TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
-		// TODO FIXME
 		// TIMERG0.wdt_feed = 1;
-		// TODO FIXME
 		// TIMERG0.wdt_wprotect = 0;
 	}
 }

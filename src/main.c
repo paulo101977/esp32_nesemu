@@ -1,7 +1,7 @@
 #include "freertos/FreeRTOS.h"
 #include "esp_system.h"
 #include "esp_event.h"
-#include "esp_event_legacy.h"
+// #include "esp_event_legacy.h"
 #include "esp_event_loop.h"
 #include "esp_partition.h"
 #include "esp_err.h"
@@ -105,7 +105,8 @@ void esp_wake_deep_sleep()
 	esp_restart();
 }
 
-esp_err_t event_handler(void *ctx, system_event_t *event)
+// TODO check if really necessary!!!
+esp_err_t event_handler(void *ctx, spi_event_t *event)
 {
 	return ESP_OK;
 }

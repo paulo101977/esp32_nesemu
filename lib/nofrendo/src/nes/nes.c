@@ -444,10 +444,9 @@ void nes_emulate(void)
          }
       }
       // Reset watchdog timer
-      // TODO: FIXME
+      // TODO: Trying to understand if this code is necessary for esp32 dev kit and other hardware
       // TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
       // TIMERG0.wdt_feed=1;
-      // TODO: FIXME
       // TIMERG0.wdt_wprotect=0;
 
       if (nes.saveSramCountdown > 0)
