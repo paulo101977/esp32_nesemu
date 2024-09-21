@@ -40,6 +40,7 @@
 #include <psxcontroller.h>
 #include <soc/timer_group_struct.h>
 #include <soc/timer_periph.h>
+#include "esp_task_wdt.h"
 
 #define AUDIO_SAMPLERATE 22050
 #define AUDIO_BUFFER_LENGTH 64
@@ -265,10 +266,18 @@ static void videoTask(void *arg)
 	yHight = DEFAULT_HEIGHT;
 	x = (DEFAULT_WIDTH - xWidth) / 2;
 	y = ((DEFAULT_HEIGHT - yHight) / 2);
+	// TODO: Trying to understand if this code is necessary for esp32 dev kit and other hardware
+   	// esp_task_wdt_add(NULL);
+
 	while (1)
 	{
+		// TODO: move this function if necessary
 		xQueueReceive(vidQueue, &bmp, portMAX_DELAY);
 		ili9341_write_frame(x, y, xWidth, yHight, (const uint8_t **)bmp->line, getXStretch(), getYStretch());
+		// esp_task_wdt_reset();
+		// rtc_wdt_protect_off();
+        // rtc_wdt_feed();
+        // rtc_wdt_protect_on();
 		// Reset watchdog timer
 		// TODO: Trying to understand if this code is necessary for esp32 dev kit and other hardware
 		// TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
@@ -350,7 +359,7 @@ int osd_init()
 	ili9341_init();
 	ili9341_write_frame(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT, NULL, 0, 0);
 	vidQueue = xQueueCreate(1, sizeof(bitmap_t *));
-	xTaskCreatePinnedToCore(&videoTask, "videoTask", 2048, NULL, 5, NULL, 1);
+	xTaskCreatePinnedToCore(&videoTask, "videoTask", 8192, NULL, 5, NULL, 1);
 	osd_initinput();
 	printf("free heap after input init: %d\n", xPortGetFreeHeapSize());
 	return 0;

@@ -32,6 +32,7 @@
 #include "freertos/task.h"
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
+#include "esp_task_wdt.h"
 #include <log.h>
 #include <osd.h>
 #include <gui.h>
@@ -405,8 +406,13 @@ void nes_emulate(void)
    nes.scanline_cycles = 0;
    nes.fiq_cycles = (int)NES_FIQ_PERIOD;
 
+   // TODO: Trying to understand if this code is necessary for esp32 dev kit and other hardware
+   // esp_task_wdt_add(NULL);
+
    while (false == nes.poweroff)
    {
+      // TODO: remove debug
+      // printf("inside nes loop >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
       if (nofrendo_ticks != last_ticks)
       {
          int tick_diff = nofrendo_ticks - last_ticks;
@@ -448,6 +454,12 @@ void nes_emulate(void)
       // TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
       // TIMERG0.wdt_feed=1;
       // TIMERG0.wdt_wprotect=0;
+      // TODO: move this function if necessary
+      // esp_task_wdt_reset();
+      // rtc_wdt_protect_off();
+      // rtc_wdt_feed();
+      // rtc_wdt_protect_on();
+      
 
       if (nes.saveSramCountdown > 0)
       {

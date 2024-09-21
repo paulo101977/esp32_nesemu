@@ -212,6 +212,8 @@ int getTurboB() {
 int psxReadInput()
 {
 	int b2b1 = 65535;
+	// TODO: remove debug
+	// printf("psxReadInput >>>>>>>>>>>> ");
 	if (inpDelay > 0)
 		inpDelay--;
 #ifndef CONFIG_HW_CONTROLLER_GPIO
@@ -360,6 +362,7 @@ bool getShutdown()
 
 void initGPIO(int gpioNo){
 	gpio_set_direction(gpioNo, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(gpioNo, GPIO_PULLDOWN_ONLY);
 	gpio_pulldown_en(gpioNo);
 }
 

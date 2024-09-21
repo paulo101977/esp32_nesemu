@@ -636,6 +636,7 @@ static int calcCrc(const uint8_t *row)
 {
     int crc = 0;
     int tmp;
+
     for (int i = ignore_border; i < 256 - ignore_border; i++)
     {
         tmp = ((crc >> 8) ^ row[i]) & 0xff;
@@ -676,6 +677,7 @@ void ili9341_write_frame(const uint16_t xs, const uint16_t ys, const uint16_t wi
     for (y = 0; y < height; y++)
     {
         yy = yStr ? scaleY[y] : y;
+        // TODO: uncomment
         if (lastY == yy)
         {
             if (!lastYshown && !getShowMenu())
