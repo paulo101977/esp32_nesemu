@@ -2,7 +2,6 @@
 #include "menu.h"
 #include "esp_system.h"
 #include "esp_event.h"
-#include "esp_event_loop.h"
 #include "esp_partition.h"
 #include "nvs_flash.h"
 #include "charData.c"

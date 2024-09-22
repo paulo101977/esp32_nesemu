@@ -407,7 +407,7 @@ void nes_emulate(void)
    nes.fiq_cycles = (int)NES_FIQ_PERIOD;
 
    // TODO: Trying to understand if this code is necessary for esp32 dev kit and other hardware
-   // esp_task_wdt_add(NULL);
+   esp_task_wdt_add(NULL);
 
    while (false == nes.poweroff)
    {
@@ -455,7 +455,7 @@ void nes_emulate(void)
       // TIMERG0.wdt_feed=1;
       // TIMERG0.wdt_wprotect=0;
       // TODO: move this function if necessary
-      // esp_task_wdt_reset();
+      esp_task_wdt_reset();
       // rtc_wdt_protect_off();
       // rtc_wdt_feed();
       // rtc_wdt_protect_on();

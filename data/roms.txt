@@ -1,7 +1,7 @@
 No.	Icon	Name	Filename
 1.	$	Super Mario Bros 1	smb1.nes
-*#*
 2.	"	Super Mario Bros 3	smb3.nes
+*#*
 3.	;	Tetris	tetris.nes
 4.	=	Legend of Zelda	zelda1.nes
 5.	+	Adventure of Link	zelda2.nes

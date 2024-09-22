@@ -1,1 +1,1 @@
-COMPONENT_EMBED_FILES := image.jpg
+# COMPONENT_EMBED_FILES := image.jpg
